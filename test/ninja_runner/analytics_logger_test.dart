@@ -32,4 +32,18 @@ void main() {
 
     expect(logger.events.single.payload, {'error_stage': 'content'});
   });
+
+  test('exposes payloads as unmodifiable maps', () {
+    final logger = AnalyticsLogger();
+
+    logger.track(
+      AnalyticsEvent.roundStart,
+      payload: const {'round_number': 1},
+    );
+
+    expect(
+      () => logger.events.single.payload['round_number'] = 2,
+      throwsUnsupportedError,
+    );
+  });
 }

@@ -35,7 +35,7 @@ class AnalyticsLogger {
       _events.add(
         LoggedAnalyticsEvent(
           name: event.name,
-          payload: _safePayload(payload),
+          payload: Map.unmodifiable(_safePayload(payload)),
         ),
       );
     } catch (_) {
