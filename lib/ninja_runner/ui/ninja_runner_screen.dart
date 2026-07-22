@@ -20,6 +20,7 @@ class _NinjaRunnerScreenState extends State<NinjaRunnerScreen>
   late RunnerController _controller;
   late final Ticker _ticker;
   var _selectedLevelIndex = 0;
+  var _highestUnlockedLevelIndex = 0;
   Duration? _lastTick;
 
   @override
@@ -95,6 +96,7 @@ class _NinjaRunnerScreenState extends State<NinjaRunnerScreen>
                   controller: _controller,
                   levels: _levels,
                   selectedLevelIndex: _selectedLevelIndex,
+                  highestUnlockedLevelIndex: _highestUnlockedLevelIndex,
                   onStart: _startRound,
                   onContinue: _continueAfterFeedback,
                   onAnswer: _chooseAnswer,
@@ -116,6 +118,9 @@ class _NinjaRunnerScreenState extends State<NinjaRunnerScreen>
 
   void _selectLevel(int index) {
     if (_controller.state.phase != RunnerPhase.ready) {
+      return;
+    }
+    if (index > _highestUnlockedLevelIndex) {
       return;
     }
     setState(() {
@@ -178,6 +183,9 @@ class _NinjaRunnerScreenState extends State<NinjaRunnerScreen>
       return;
     }
     setState(() {
+      _highestUnlockedLevelIndex = _highestUnlockedLevelIndex < nextIndex
+          ? nextIndex
+          : _highestUnlockedLevelIndex;
       _selectedLevelIndex = nextIndex;
       _controller = _createController(_levels[nextIndex]);
       _controller.startRound();
@@ -238,6 +246,7 @@ class _Controls extends StatelessWidget {
     required this.controller,
     required this.levels,
     required this.selectedLevelIndex,
+    required this.highestUnlockedLevelIndex,
     required this.onStart,
     required this.onContinue,
     required this.onAnswer,
@@ -248,6 +257,7 @@ class _Controls extends StatelessWidget {
   final RunnerController controller;
   final List<GateDashLevel> levels;
   final int selectedLevelIndex;
+  final int highestUnlockedLevelIndex;
   final VoidCallback onStart;
   final VoidCallback onContinue;
   final ValueChanged<int> onAnswer;
@@ -266,6 +276,7 @@ class _Controls extends StatelessWidget {
               _LevelChoices(
                 levels: levels,
                 selectedLevelIndex: selectedLevelIndex,
+                highestUnlockedLevelIndex: highestUnlockedLevelIndex,
                 onSelectLevel: onSelectLevel,
               ),
               const SizedBox(height: 12),
@@ -336,11 +347,13 @@ class _LevelChoices extends StatelessWidget {
   const _LevelChoices({
     required this.levels,
     required this.selectedLevelIndex,
+    required this.highestUnlockedLevelIndex,
     required this.onSelectLevel,
   });
 
   final List<GateDashLevel> levels;
   final int selectedLevelIndex;
+  final int highestUnlockedLevelIndex;
   final ValueChanged<int> onSelectLevel;
 
   @override
@@ -349,12 +362,20 @@ class _LevelChoices extends StatelessWidget {
       spacing: 8,
       runSpacing: 8,
       children: [
-        for (var index = 0; index < levels.length; index++)
+        for (var index = 0; index < levels.length; index++) ...[
           ChoiceChip(
             label: Text(levels[index].name),
             selected: index == selectedLevelIndex,
-            onSelected: (_) => onSelectLevel(index),
+            onSelected: index <= highestUnlockedLevelIndex
+                ? (_) => onSelectLevel(index)
+                : null,
           ),
+          if (index > highestUnlockedLevelIndex)
+            const Padding(
+              padding: EdgeInsets.only(right: 4),
+              child: Text('Locked'),
+            ),
+        ],
       ],
     );
   }
