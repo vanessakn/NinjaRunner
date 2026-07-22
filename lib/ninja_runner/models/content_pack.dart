@@ -161,7 +161,13 @@ Map<String, Object?> _map(Map<String, Object?> json, String key) {
 List<Map<String, Object?>> _list(Map<String, Object?> json, String key) {
   final value = json[key];
   if (value is List) {
-    return value.cast<Map<String, Object?>>();
+    return [
+      for (final item in value)
+        if (item is Map<String, Object?>)
+          item
+        else
+          throw FormatException('Expected map entries for "$key".'),
+    ];
   }
   throw FormatException('Expected list for "$key".');
 }

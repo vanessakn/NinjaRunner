@@ -67,5 +67,36 @@ void main() {
         throwsA(isA<FormatException>()),
       );
     });
+
+    test('rejects malformed answer list members', () {
+      expect(
+        () => ContentPack.fromJson({
+          'id': 'bad-pack',
+          'title': 'Bad Pack',
+          'minAge': 5,
+          'maxAge': 8,
+          'theme': {
+            'id': 'france-arena',
+            'name': 'France Arena',
+            'primaryColor': 0xFF2867D4,
+            'secondaryColor': 0xFFFFFFFF,
+          },
+          'runner': {'id': 'nari', 'name': 'Nari'},
+          'prompts': [
+            {
+              'id': 'bad-prompt',
+              'prompt': 'Choose one.',
+              'correctAnswerId': 'kind',
+              'feedback': 'Try again.',
+              'answers': [
+                {'id': 'kind', 'label': 'kind'},
+                'loud',
+              ],
+            },
+          ],
+        }),
+        throwsA(isA<FormatException>()),
+      );
+    });
   });
 }
