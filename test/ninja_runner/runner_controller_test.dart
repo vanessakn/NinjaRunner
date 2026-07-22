@@ -7,7 +7,7 @@ void main() {
   test('starts a round and shows the first prompt', () {
     final logger = AnalyticsLogger();
     final controller = RunnerController(
-      contentPack: sampleContentPack(),
+      level: sampleGateDashLevels().first,
       analyticsLogger: logger,
     );
 
@@ -21,7 +21,7 @@ void main() {
 
   test('correct answer increases score and streak', () {
     final controller = RunnerController(
-      contentPack: sampleContentPack(),
+      level: sampleGateDashLevels().first,
       analyticsLogger: AnalyticsLogger(),
     )..startRound();
 
@@ -36,7 +36,7 @@ void main() {
   test('second answer during feedback does not change state or analytics', () {
     final logger = AnalyticsLogger();
     final controller = RunnerController(
-      contentPack: sampleContentPack(),
+      level: sampleGateDashLevels().first,
       analyticsLogger: logger,
     )..startRound();
 
@@ -63,7 +63,7 @@ void main() {
 
   test('incorrect answer resets streak and keeps score', () {
     final controller = RunnerController(
-      contentPack: sampleContentPack(),
+      level: sampleGateDashLevels().first,
       analyticsLogger: AnalyticsLogger(),
     )..startRound();
 
@@ -75,11 +75,12 @@ void main() {
     expect(result.feedback, 'Nice choice! Sharing helps your friends.');
   });
 
-  test('unknown answer while running is rejected without state or analytics changes',
+  test(
+      'unknown answer while running is rejected without state or analytics changes',
       () {
     final logger = AnalyticsLogger();
     final controller = RunnerController(
-      contentPack: sampleContentPack(),
+      level: sampleGateDashLevels().first,
       analyticsLogger: logger,
     )..startRound();
     final state = controller.state;
@@ -104,7 +105,7 @@ void main() {
 
   test('advances through five prompts and completes the round', () {
     final controller = RunnerController(
-      contentPack: sampleContentPack(),
+      level: sampleGateDashLevels().first,
       analyticsLogger: AnalyticsLogger(),
     )..startRound();
 
@@ -120,7 +121,7 @@ void main() {
 
   test('summary transition clears feedback result and resets progress', () {
     final controller = RunnerController(
-      contentPack: sampleContentPack(),
+      level: sampleGateDashLevels().first,
       analyticsLogger: AnalyticsLogger(),
     )..startRound();
 
@@ -136,5 +137,38 @@ void main() {
     expect(controller.state.phase, RunnerPhase.summary);
     expect(controller.state.runnerProgress, 0);
     expect(controller.state.lastResult, isNull);
+  });
+
+  test('runner speed comes from selected level', () {
+    final controller = RunnerController(
+      level: sampleGateDashLevels()[2],
+      analyticsLogger: AnalyticsLogger(),
+    )..startRound();
+
+    controller.tick(1);
+
+    expect(controller.state.runnerProgress, 0.3);
+  });
+
+  test('round completion reports whether selected level is complete', () {
+    final logger = AnalyticsLogger();
+    final controller = RunnerController(
+      level: sampleGateDashLevels()[1],
+      analyticsLogger: logger,
+    )..startRound();
+
+    for (final answerId in [
+      'shout',
+      'invite',
+      'practice',
+      'take-turns',
+      'look'
+    ]) {
+      controller.selectAnswer(answerId);
+      controller.continueAfterFeedback();
+    }
+
+    expect(controller.isLevelComplete, isTrue);
+    expect(logger.events.last.payload, containsPair('level_complete', true));
   });
 }

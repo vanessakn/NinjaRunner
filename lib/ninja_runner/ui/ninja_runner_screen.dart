@@ -4,6 +4,7 @@ import 'package:flutter/scheduler.dart';
 import '../analytics/analytics_logger.dart';
 import '../data/sample_content_pack.dart';
 import '../game/runner_controller.dart';
+import '../models/gate_dash_level.dart';
 import '../rendering/runner_painter.dart';
 
 class NinjaRunnerScreen extends StatefulWidget {
@@ -15,17 +16,17 @@ class NinjaRunnerScreen extends StatefulWidget {
 
 class _NinjaRunnerScreenState extends State<NinjaRunnerScreen>
     with SingleTickerProviderStateMixin {
-  late final RunnerController _controller;
+  late final List<GateDashLevel> _levels;
+  late RunnerController _controller;
   late final Ticker _ticker;
+  var _selectedLevelIndex = 0;
   Duration? _lastTick;
 
   @override
   void initState() {
     super.initState();
-    _controller = RunnerController(
-      contentPack: sampleContentPack(),
-      analyticsLogger: AnalyticsLogger(),
-    );
+    _levels = sampleGateDashLevels();
+    _controller = _createController(_levels[_selectedLevelIndex]);
     _ticker = createTicker(_handleTick);
   }
 
@@ -92,9 +93,13 @@ class _NinjaRunnerScreenState extends State<NinjaRunnerScreen>
                 ),
                 _Controls(
                   controller: _controller,
+                  levels: _levels,
+                  selectedLevelIndex: _selectedLevelIndex,
                   onStart: _startRound,
                   onContinue: _continueAfterFeedback,
                   onAnswer: _chooseAnswer,
+                  onSelectLevel: _selectLevel,
+                  onNextLevel: _goToNextLevel,
                 ),
               ],
             );
@@ -107,6 +112,16 @@ class _NinjaRunnerScreenState extends State<NinjaRunnerScreen>
   void _startRound() {
     setState(_controller.startRound);
     _startTicker();
+  }
+
+  void _selectLevel(int index) {
+    if (_controller.state.phase != RunnerPhase.ready) {
+      return;
+    }
+    setState(() {
+      _selectedLevelIndex = index;
+      _controller = _createController(_levels[index]);
+    });
   }
 
   void _continueAfterFeedback() {
@@ -156,6 +171,26 @@ class _NinjaRunnerScreenState extends State<NinjaRunnerScreen>
     }
     _lastTick = null;
   }
+
+  void _goToNextLevel() {
+    final nextIndex = _selectedLevelIndex + 1;
+    if (nextIndex >= _levels.length || !_controller.isLevelComplete) {
+      return;
+    }
+    setState(() {
+      _selectedLevelIndex = nextIndex;
+      _controller = _createController(_levels[nextIndex]);
+      _controller.startRound();
+    });
+    _startTicker();
+  }
+
+  RunnerController _createController(GateDashLevel level) {
+    return RunnerController(
+      level: level,
+      analyticsLogger: AnalyticsLogger(),
+    );
+  }
 }
 
 class _Header extends StatelessWidget {
@@ -181,7 +216,8 @@ class _Header extends StatelessWidget {
                       ),
                 ),
                 Text(pack.runner.name),
-                Text('${pack.theme.name} - ${pack.ageRangeLabel}'),
+                Text('${controller.level.name} - ${pack.theme.name}'),
+                Text(pack.ageRangeLabel),
               ],
             ),
           ),
@@ -200,15 +236,23 @@ class _Header extends StatelessWidget {
 class _Controls extends StatelessWidget {
   const _Controls({
     required this.controller,
+    required this.levels,
+    required this.selectedLevelIndex,
     required this.onStart,
     required this.onContinue,
     required this.onAnswer,
+    required this.onSelectLevel,
+    required this.onNextLevel,
   });
 
   final RunnerController controller;
+  final List<GateDashLevel> levels;
+  final int selectedLevelIndex;
   final VoidCallback onStart;
   final VoidCallback onContinue;
   final ValueChanged<int> onAnswer;
+  final ValueChanged<int> onSelectLevel;
+  final VoidCallback onNextLevel;
 
   @override
   Widget build(BuildContext context) {
@@ -216,9 +260,20 @@ class _Controls extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
       child: switch (state.phase) {
-        RunnerPhase.ready => FilledButton(
-            onPressed: onStart,
-            child: const Text('Start Run'),
+        RunnerPhase.ready => Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _LevelChoices(
+                levels: levels,
+                selectedLevelIndex: selectedLevelIndex,
+                onSelectLevel: onSelectLevel,
+              ),
+              const SizedBox(height: 12),
+              FilledButton(
+                onPressed: onStart,
+                child: const Text('Start Run'),
+              ),
+            ],
           ),
         RunnerPhase.running => Row(
             children: [
@@ -245,22 +300,62 @@ class _Controls extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                'Great run! Score: '
-                '${state.score}/${controller.contentPack.prompts.length}',
+                controller.isLevelComplete ? 'Level Complete!' : 'Try Again',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w900,
                     ),
               ),
-              const SizedBox(height: 10),
-              FilledButton(
-                onPressed: onStart,
-                child: const Text('Play Again'),
+              const SizedBox(height: 4),
+              Text(
+                'Score: ${state.score}/${controller.contentPack.prompts.length} '
+                '- Need ${controller.level.requiredScore}',
+                textAlign: TextAlign.center,
               ),
+              const SizedBox(height: 10),
+              if (controller.isLevelComplete &&
+                  selectedLevelIndex < levels.length - 1)
+                FilledButton(
+                  onPressed: onNextLevel,
+                  child: const Text('Next Level'),
+                )
+              else
+                FilledButton(
+                  onPressed: onStart,
+                  child: const Text('Play Again'),
+                ),
             ],
           ),
         RunnerPhase.error => const Text('The run needs a quick reset.'),
       },
+    );
+  }
+}
+
+class _LevelChoices extends StatelessWidget {
+  const _LevelChoices({
+    required this.levels,
+    required this.selectedLevelIndex,
+    required this.onSelectLevel,
+  });
+
+  final List<GateDashLevel> levels;
+  final int selectedLevelIndex;
+  final ValueChanged<int> onSelectLevel;
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        for (var index = 0; index < levels.length; index++)
+          ChoiceChip(
+            label: Text(levels[index].name),
+            selected: index == selectedLevelIndex,
+            onSelected: (_) => onSelectLevel(index),
+          ),
+      ],
     );
   }
 }

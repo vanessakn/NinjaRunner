@@ -6,6 +6,9 @@ void main() {
     await tester.pumpWidget(const KidNationMobileGamesApp());
 
     expect(find.text('KidNation Gate Dash'), findsOneWidget);
+    expect(find.text('Warm-Up Dash'), findsOneWidget);
+    expect(find.text('Quick Choice Dash'), findsOneWidget);
+    expect(find.text('Star Streak Challenge'), findsOneWidget);
     expect(find.text('Start Run'), findsOneWidget);
     expect(find.text('Jordan'), findsOneWidget);
   });

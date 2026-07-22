@@ -1,5 +1,6 @@
 import '../analytics/analytics_logger.dart';
 import '../models/content_pack.dart';
+import '../models/gate_dash_level.dart';
 
 enum RunnerPhase {
   ready,
@@ -72,28 +73,38 @@ class RunnerGameState {
 
 class RunnerController {
   RunnerController({
-    required this.contentPack,
+    required this.level,
     required this.analyticsLogger,
   }) : state = RunnerGameState.initial() {
     analyticsLogger.track(
       AnalyticsEvent.gameReady,
-      payload: {'pack_id': contentPack.id},
+      payload: {
+        'pack_id': contentPack.id,
+        'level_id': level.id,
+      },
     );
   }
 
-  final ContentPack contentPack;
+  final GateDashLevel level;
   final AnalyticsLogger analyticsLogger;
   RunnerGameState state;
+
+  ContentPack get contentPack => level.contentPack;
 
   RunnerPrompt get currentPrompt {
     return contentPack.prompts[state.currentPromptIndex];
   }
 
+  bool get isLevelComplete => level.isComplete(state.score);
+
   void startRound() {
     state = RunnerGameState.initial().copyWith(phase: RunnerPhase.running);
     analyticsLogger.track(
       AnalyticsEvent.roundStart,
-      payload: {'pack_id': contentPack.id},
+      payload: {
+        'pack_id': contentPack.id,
+        'level_id': level.id,
+      },
     );
     _trackPromptShown();
   }
@@ -102,9 +113,10 @@ class RunnerController {
     if (state.phase != RunnerPhase.running) {
       return;
     }
-    final nextProgress = (state.runnerProgress + deltaSeconds * 0.22)
-        .clamp(0, 1)
-        .toDouble();
+    final nextProgress =
+        (state.runnerProgress + deltaSeconds * level.runnerSpeed)
+            .clamp(0, 1)
+            .toDouble();
     state = state.copyWith(runnerProgress: nextProgress);
   }
 
@@ -134,6 +146,7 @@ class RunnerController {
       AnalyticsEvent.gateSelected,
       payload: {
         'pack_id': contentPack.id,
+        'level_id': level.id,
         'prompt_id': prompt.id,
         'selected_answer_id': answerId,
       },
@@ -142,6 +155,7 @@ class RunnerController {
       AnalyticsEvent.answerResult,
       payload: {
         'pack_id': contentPack.id,
+        'level_id': level.id,
         'prompt_id': prompt.id,
         'selected_answer_id': answerId,
         'correct_answer_id': prompt.correctAnswerId,
@@ -173,9 +187,11 @@ class RunnerController {
         AnalyticsEvent.roundComplete,
         payload: {
           'pack_id': contentPack.id,
+          'level_id': level.id,
           'score': state.score,
           'prompt_count': contentPack.prompts.length,
           'streak': state.streak,
+          'level_complete': isLevelComplete,
         },
       );
       return;
@@ -195,6 +211,7 @@ class RunnerController {
       AnalyticsEvent.promptShown,
       payload: {
         'pack_id': contentPack.id,
+        'level_id': level.id,
         'prompt_id': currentPrompt.id,
         'prompt_index': state.currentPromptIndex,
       },

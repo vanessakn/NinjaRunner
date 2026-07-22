@@ -1,4 +1,31 @@
 import '../models/content_pack.dart';
+import '../models/gate_dash_level.dart';
+
+List<GateDashLevel> sampleGateDashLevels() {
+  return [
+    GateDashLevel(
+      id: 'warm-up-dash',
+      name: 'Warm-Up Dash',
+      runnerSpeed: 0.18,
+      requiredScore: 0,
+      contentPack: sampleContentPack(),
+    ),
+    GateDashLevel(
+      id: 'quick-choice-dash',
+      name: 'Quick Choice Dash',
+      runnerSpeed: 0.24,
+      requiredScore: 4,
+      contentPack: _quickChoicePack(),
+    ),
+    GateDashLevel(
+      id: 'star-streak-challenge',
+      name: 'Star Streak Challenge',
+      runnerSpeed: 0.3,
+      requiredScore: 5,
+      contentPack: _starStreakPack(),
+    ),
+  ];
+}
 
 ContentPack sampleContentPack() {
   return ContentPack.fromJson({
@@ -62,6 +89,142 @@ ContentPack sampleContentPack() {
         'answers': [
           {'id': 'cheer', 'label': 'cheer'},
           {'id': 'tease', 'label': 'tease'},
+        ],
+      },
+    ],
+  });
+}
+
+ContentPack _quickChoicePack() {
+  return ContentPack.fromJson({
+    'id': 'kidnation-cup-quick-choice',
+    'title': 'KidNation Cup Quick Choice',
+    'minAge': 5,
+    'maxAge': 8,
+    'theme': {
+      'id': 'france-arena',
+      'name': 'France Arena',
+      'primaryColor': 0xFF2867D4,
+      'secondaryColor': 0xFFFFFFFF,
+    },
+    'runner': {'id': 'nari', 'name': 'Nari'},
+    'prompts': [
+      {
+        'id': 'calm-choice',
+        'prompt': 'Choose the calm choice.',
+        'correctAnswerId': 'breathe',
+        'feedback': 'A deep breath can help your body slow down.',
+        'answers': [
+          {'id': 'breathe', 'label': 'breathe'},
+          {'id': 'shout', 'label': 'shout'},
+        ],
+      },
+      {
+        'id': 'help-a-friend',
+        'prompt': 'What helps a friend feel included?',
+        'correctAnswerId': 'invite',
+        'feedback': 'Inviting someone in helps them feel welcome.',
+        'answers': [
+          {'id': 'invite', 'label': 'invite'},
+          {'id': 'ignore', 'label': 'ignore'},
+        ],
+      },
+      {
+        'id': 'try-new-thing',
+        'prompt': 'Pick the brave thought.',
+        'correctAnswerId': 'practice',
+        'feedback': 'Practice helps new things feel easier.',
+        'answers': [
+          {'id': 'practice', 'label': 'I can practice'},
+          {'id': 'quit', 'label': 'I quit'},
+        ],
+      },
+      {
+        'id': 'fair-choice',
+        'prompt': 'Choose the fair choice.',
+        'correctAnswerId': 'take-turns',
+        'feedback': 'Taking turns gives everyone a chance.',
+        'answers': [
+          {'id': 'take-turns', 'label': 'take turns'},
+          {'id': 'keep-all', 'label': 'keep all'},
+        ],
+      },
+      {
+        'id': 'listen-close',
+        'prompt': 'What shows good listening?',
+        'correctAnswerId': 'look',
+        'feedback': 'Looking and listening helps you understand.',
+        'answers': [
+          {'id': 'look', 'label': 'look and listen'},
+          {'id': 'wander', 'label': 'wander away'},
+        ],
+      },
+    ],
+  });
+}
+
+ContentPack _starStreakPack() {
+  return ContentPack.fromJson({
+    'id': 'kidnation-cup-star-streak',
+    'title': 'KidNation Cup Star Streak',
+    'minAge': 5,
+    'maxAge': 8,
+    'theme': {
+      'id': 'portugal-arena',
+      'name': 'Portugal Arena',
+      'primaryColor': 0xFFE53B44,
+      'secondaryColor': 0xFF2AA757,
+    },
+    'runner': {'id': 'arjun', 'name': 'Arjun'},
+    'prompts': [
+      {
+        'id': 'kind-repair',
+        'prompt': 'Which words help repair a mistake?',
+        'correctAnswerId': 'sorry',
+        'feedback': 'Saying sorry can help repair hurt feelings.',
+        'answers': [
+          {'id': 'sorry', 'label': 'I am sorry'},
+          {'id': 'whatever', 'label': 'whatever'},
+        ],
+      },
+      {
+        'id': 'patient-choice',
+        'prompt': 'Choose the patient choice.',
+        'correctAnswerId': 'wait',
+        'feedback': 'Waiting calmly can be a strong choice.',
+        'answers': [
+          {'id': 'wait', 'label': 'wait calmly'},
+          {'id': 'push', 'label': 'push ahead'},
+        ],
+      },
+      {
+        'id': 'notice-feelings',
+        'prompt': 'What helps you notice feelings?',
+        'correctAnswerId': 'ask',
+        'feedback': 'Asking kindly helps you learn how someone feels.',
+        'answers': [
+          {'id': 'ask', 'label': 'ask kindly'},
+          {'id': 'guess', 'label': 'guess loudly'},
+        ],
+      },
+      {
+        'id': 'share-space',
+        'prompt': 'Pick the respectful action.',
+        'correctAnswerId': 'make-room',
+        'feedback': 'Making room shows respect for others.',
+        'answers': [
+          {'id': 'make-room', 'label': 'make room'},
+          {'id': 'crowd', 'label': 'crowd in'},
+        ],
+      },
+      {
+        'id': 'encourage',
+        'prompt': 'Choose the encouraging words.',
+        'correctAnswerId': 'you-can',
+        'feedback': 'Encouraging words can help friends keep trying.',
+        'answers': [
+          {'id': 'you-can', 'label': 'you can do it'},
+          {'id': 'too-hard', 'label': 'too hard'},
         ],
       },
     ],
