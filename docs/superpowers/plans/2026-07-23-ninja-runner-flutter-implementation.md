@@ -1,8 +1,8 @@
-# KidNation Gate Dash Flutter Prototype Implementation Plan
+# Ninja Runner Flutter Prototype Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build a Flutter-only `KidNation Gate Dash` prototype for ages 5-8 using the KidNation Game Ideas Playbook's `Ninja Runner` mechanic and only the characters/theme/style/event inspiration from `miasstack/knsoccer`.
+**Goal:** Build a Flutter-only `Ninja Runner` prototype for ages 5-8 using the KidNation Game Ideas Playbook's `Ninja Runner` mechanic and only the characters/theme/style/event inspiration from `miasstack/knsoccer`.
 
 **Architecture:** Scaffold a small Flutter app, then split the game into focused model, sample data, controller, analytics, rendering, and screen files. Use `CustomPainter` plus a `Ticker`-driven loop for the playable runner while keeping the learning/content logic testable without Flutter rendering.
 
@@ -101,14 +101,14 @@ class KidNationMobileGamesApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'KidNation Gate Dash',
+      title: 'Ninja Runner',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF00A7E1)),
         useMaterial3: true,
       ),
       home: const Scaffold(
         body: Center(
-          child: Text('KidNation Gate Dash'),
+          child: Text('Ninja Runner'),
         ),
       ),
     );
@@ -126,7 +126,7 @@ void main() {
   testWidgets('shows the app title', (tester) async {
     await tester.pumpWidget(const KidNationMobileGamesApp());
 
-    expect(find.text('KidNation Gate Dash'), findsOneWidget);
+    expect(find.text('Ninja Runner'), findsOneWidget);
   });
 }
 ```
@@ -1325,7 +1325,7 @@ void main() {
   testWidgets('shows the Ninja Runner start screen', (tester) async {
     await tester.pumpWidget(const KidNationMobileGamesApp());
 
-    expect(find.text('KidNation Gate Dash'), findsOneWidget);
+    expect(find.text('Ninja Runner'), findsOneWidget);
     expect(find.text('Start Run'), findsOneWidget);
     expect(find.text('Jordan'), findsOneWidget);
   });
@@ -1489,7 +1489,7 @@ class _Header extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'KidNation Gate Dash',
+                  'Ninja Runner',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.w900,
                       ),
@@ -1597,7 +1597,7 @@ class KidNationMobileGamesApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'KidNation Gate Dash',
+      title: 'Ninja Runner',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF00A7E1)),
@@ -1661,9 +1661,9 @@ Create `README.md`:
 
 Flutter prototypes for KidNation learning games.
 
-## KidNation Gate Dash Prototype
+## Ninja Runner Prototype
 
-`KidNation Gate Dash` is a Flutter-only answer-gate runner for ages 5-8. It uses the KidNation Game Ideas Playbook mechanic and only the characters, visual theme ingredients, celebration style, and event-pattern inspiration from `miasstack/knsoccer`.
+`Ninja Runner` is a Flutter-only answer-gate runner for ages 5-8. It uses the KidNation Game Ideas Playbook mechanic and only the characters, visual theme ingredients, celebration style, and event-pattern inspiration from `miasstack/knsoccer`.
 
 It does not reuse the KNSoccer soccer-match concept or mechanics.
 
@@ -1701,7 +1701,7 @@ flutter devices
 flutter run -d chrome
 ```
 
-Expected: the app opens and shows the `KidNation Gate Dash` start screen. If Chrome is not available, run on any listed simulator/device from `flutter devices`.
+Expected: the app opens and shows the `Ninja Runner` start screen. If Chrome is not available, run on any listed simulator/device from `flutter devices`.
 
 - [ ] **Step 4: Commit README and final verification state**
 

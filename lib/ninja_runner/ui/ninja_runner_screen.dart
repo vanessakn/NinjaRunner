@@ -4,7 +4,7 @@ import 'package:flutter/scheduler.dart';
 import '../analytics/analytics_logger.dart';
 import '../data/sample_content_pack.dart';
 import '../game/runner_controller.dart';
-import '../models/gate_dash_level.dart';
+import '../models/ninja_runner_level.dart';
 import '../rendering/runner_painter.dart';
 
 class NinjaRunnerScreen extends StatefulWidget {
@@ -16,7 +16,7 @@ class NinjaRunnerScreen extends StatefulWidget {
 
 class _NinjaRunnerScreenState extends State<NinjaRunnerScreen>
     with SingleTickerProviderStateMixin {
-  late final List<GateDashLevel> _levels;
+  late final List<NinjaRunnerLevel> _levels;
   late RunnerController _controller;
   late final Ticker _ticker;
   var _selectedLevelIndex = 0;
@@ -26,7 +26,7 @@ class _NinjaRunnerScreenState extends State<NinjaRunnerScreen>
   @override
   void initState() {
     super.initState();
-    _levels = sampleGateDashLevels();
+    _levels = sampleNinjaRunnerLevels();
     _controller = _createController(_levels[_selectedLevelIndex]);
     _ticker = createTicker(_handleTick);
   }
@@ -193,7 +193,7 @@ class _NinjaRunnerScreenState extends State<NinjaRunnerScreen>
     _startTicker();
   }
 
-  RunnerController _createController(GateDashLevel level) {
+  RunnerController _createController(NinjaRunnerLevel level) {
     return RunnerController(
       level: level,
       analyticsLogger: AnalyticsLogger(),
@@ -218,7 +218,7 @@ class _Header extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'KidNation Gate Dash',
+                  'Ninja Runner',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.w900,
                       ),
@@ -255,7 +255,7 @@ class _Controls extends StatelessWidget {
   });
 
   final RunnerController controller;
-  final List<GateDashLevel> levels;
+  final List<NinjaRunnerLevel> levels;
   final int selectedLevelIndex;
   final int highestUnlockedLevelIndex;
   final VoidCallback onStart;
@@ -351,7 +351,7 @@ class _LevelChoices extends StatelessWidget {
     required this.onSelectLevel,
   });
 
-  final List<GateDashLevel> levels;
+  final List<NinjaRunnerLevel> levels;
   final int selectedLevelIndex;
   final int highestUnlockedLevelIndex;
   final ValueChanged<int> onSelectLevel;

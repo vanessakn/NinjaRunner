@@ -1,7 +1,7 @@
 import 'content_pack.dart';
 
-class GateDashLevel {
-  const GateDashLevel({
+class NinjaRunnerLevel {
+  const NinjaRunnerLevel({
     required this.id,
     required this.name,
     required this.runnerSpeed,

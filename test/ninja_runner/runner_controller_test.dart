@@ -7,7 +7,7 @@ void main() {
   test('starts a round and shows the first prompt', () {
     final logger = AnalyticsLogger();
     final controller = RunnerController(
-      level: sampleGateDashLevels().first,
+      level: sampleNinjaRunnerLevels().first,
       analyticsLogger: logger,
     );
 
@@ -21,7 +21,7 @@ void main() {
 
   test('correct answer increases score and streak', () {
     final controller = RunnerController(
-      level: sampleGateDashLevels().first,
+      level: sampleNinjaRunnerLevels().first,
       analyticsLogger: AnalyticsLogger(),
     )..startRound();
 
@@ -36,7 +36,7 @@ void main() {
   test('second answer during feedback does not change state or analytics', () {
     final logger = AnalyticsLogger();
     final controller = RunnerController(
-      level: sampleGateDashLevels().first,
+      level: sampleNinjaRunnerLevels().first,
       analyticsLogger: logger,
     )..startRound();
 
@@ -63,7 +63,7 @@ void main() {
 
   test('incorrect answer resets streak and keeps score', () {
     final controller = RunnerController(
-      level: sampleGateDashLevels().first,
+      level: sampleNinjaRunnerLevels().first,
       analyticsLogger: AnalyticsLogger(),
     )..startRound();
 
@@ -80,7 +80,7 @@ void main() {
       () {
     final logger = AnalyticsLogger();
     final controller = RunnerController(
-      level: sampleGateDashLevels().first,
+      level: sampleNinjaRunnerLevels().first,
       analyticsLogger: logger,
     )..startRound();
     final state = controller.state;
@@ -105,7 +105,7 @@ void main() {
 
   test('advances through five prompts and completes the round', () {
     final controller = RunnerController(
-      level: sampleGateDashLevels().first,
+      level: sampleNinjaRunnerLevels().first,
       analyticsLogger: AnalyticsLogger(),
     )..startRound();
 
@@ -121,7 +121,7 @@ void main() {
 
   test('summary transition clears feedback result and resets progress', () {
     final controller = RunnerController(
-      level: sampleGateDashLevels().first,
+      level: sampleNinjaRunnerLevels().first,
       analyticsLogger: AnalyticsLogger(),
     )..startRound();
 
@@ -141,7 +141,7 @@ void main() {
 
   test('runner speed comes from selected level', () {
     final controller = RunnerController(
-      level: sampleGateDashLevels()[2],
+      level: sampleNinjaRunnerLevels()[2],
       analyticsLogger: AnalyticsLogger(),
     )..startRound();
 
@@ -153,7 +153,7 @@ void main() {
   test('round completion reports whether selected level is complete', () {
     final logger = AnalyticsLogger();
     final controller = RunnerController(
-      level: sampleGateDashLevels()[1],
+      level: sampleNinjaRunnerLevels()[1],
       analyticsLogger: logger,
     )..startRound();
 

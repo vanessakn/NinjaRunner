@@ -1,6 +1,6 @@
 import '../analytics/analytics_logger.dart';
 import '../models/content_pack.dart';
-import '../models/gate_dash_level.dart';
+import '../models/ninja_runner_level.dart';
 
 enum RunnerPhase {
   ready,
@@ -85,7 +85,7 @@ class RunnerController {
     );
   }
 
-  final GateDashLevel level;
+  final NinjaRunnerLevel level;
   final AnalyticsLogger analyticsLogger;
   RunnerGameState state;
 

@@ -1,23 +1,23 @@
 import '../models/content_pack.dart';
-import '../models/gate_dash_level.dart';
+import '../models/ninja_runner_level.dart';
 
-List<GateDashLevel> sampleGateDashLevels() {
+List<NinjaRunnerLevel> sampleNinjaRunnerLevels() {
   return [
-    GateDashLevel(
+    NinjaRunnerLevel(
       id: 'warm-up-dash',
       name: 'Warm-Up Dash',
       runnerSpeed: 0.18,
       requiredScore: 0,
       contentPack: sampleContentPack(),
     ),
-    GateDashLevel(
+    NinjaRunnerLevel(
       id: 'quick-choice-dash',
       name: 'Quick Choice Dash',
       runnerSpeed: 0.24,
       requiredScore: 4,
       contentPack: _quickChoicePack(),
     ),
-    GateDashLevel(
+    NinjaRunnerLevel(
       id: 'star-streak-challenge',
       name: 'Star Streak Challenge',
       runnerSpeed: 0.3,

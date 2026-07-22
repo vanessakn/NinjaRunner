@@ -3,7 +3,7 @@ import 'package:kidnation_mobile_games/ninja_runner/data/sample_content_pack.dar
 
 void main() {
   test('sample levels define increasing speed and unlock requirements', () {
-    final levels = sampleGateDashLevels();
+    final levels = sampleNinjaRunnerLevels();
 
     expect(levels.map((level) => level.name), [
       'Warm-Up Dash',
@@ -17,7 +17,7 @@ void main() {
   });
 
   test('level completion uses required score', () {
-    final levels = sampleGateDashLevels();
+    final levels = sampleNinjaRunnerLevels();
 
     expect(levels[0].isComplete(0), isTrue);
     expect(levels[1].isComplete(3), isFalse);
