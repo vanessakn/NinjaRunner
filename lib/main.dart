@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'ninja_runner/ui/ninja_runner_screen.dart';
+
 void main() {
   runApp(const KidNationMobileGamesApp());
 }
@@ -11,15 +13,21 @@ class KidNationMobileGamesApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'KidNation Ninja Runner',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF00A7E1)),
+        filledButtonTheme: FilledButtonThemeData(
+          style: FilledButton.styleFrom(
+            minimumSize: const Size.fromHeight(52),
+            textStyle: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ),
         useMaterial3: true,
       ),
-      home: const Scaffold(
-        body: Center(
-          child: Text('KidNation Ninja Runner'),
-        ),
-      ),
+      home: const NinjaRunnerScreen(),
     );
   }
 }
