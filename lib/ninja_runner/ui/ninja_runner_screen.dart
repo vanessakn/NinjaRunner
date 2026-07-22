@@ -175,7 +175,7 @@ class _Header extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'KidNation Ninja Runner',
+                  'KidNation Gate Dash',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.w900,
                       ),

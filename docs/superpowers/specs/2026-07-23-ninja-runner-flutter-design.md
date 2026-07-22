@@ -1,8 +1,8 @@
-# Ninja Runner Flutter Prototype Design
+# KidNation Gate Dash Flutter Prototype Design
 
 ## Summary
 
-Build a Flutter-only prototype of **Ninja Runner**, a short, replayable answer-gate learning game inspired by the KidNation Game Ideas Playbook. The prototype targets ages **5-8** and uses a single-runner lane: a KidNation character runs forward, receives a prompt, and chooses the correct answer gate.
+Build a Flutter-only prototype of **KidNation Gate Dash**, a short, replayable answer-gate learning game inspired by the KidNation Game Ideas Playbook's `Ninja Runner` mechanic. The prototype targets ages **5-8** and uses a single-runner lane: a KidNation character runs forward, receives a prompt, and chooses the correct answer gate.
 
 The prototype may reuse **characters, themes, visual flavor, and event-pattern inspiration** from `miasstack/knsoccer`, but it must not reuse the KNSoccer game concept.
 
@@ -34,7 +34,7 @@ Not allowed from KNSoccer:
 
 ## Product Goals
 
-- Prove the playbook's `Ninja Runner` mechanic as a reusable Flutter game template.
+- Prove the playbook's `Ninja Runner` mechanic under the product name `KidNation Gate Dash` as a reusable Flutter game template.
 - Keep the first version small enough to build, test, and iterate quickly.
 - Make the experience clear for ages 5-8 through large targets, simple prompts, readable text, and audio-ready copy.
 - Shape the content as a JSON-like pack so future KidNation songs and videos can feed the same mechanic.
