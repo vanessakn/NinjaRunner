@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kidnation_mobile_games/ninja_runner/data/sample_content_pack.dart';
 import 'package:kidnation_mobile_games/ninja_runner/models/content_pack.dart';
 
 void main() {
@@ -97,6 +98,31 @@ void main() {
         }),
         throwsA(isA<FormatException>()),
       );
+    });
+
+    test('sample pack uses KNSoccer cast and avoids soccer mechanics', () {
+      final pack = sampleContentPack();
+
+      expect(pack.minAge, 5);
+      expect(pack.maxAge, 8);
+      expect(['Jordan', 'Nari', 'Bjorn', 'Arjun'], contains(pack.runner.name));
+      expect(pack.prompts, hasLength(5));
+
+      final forbiddenWords = RegExp(
+        r'\b(dribble|pass|shoot|tackle|header|goal|match|3v3)\b',
+        caseSensitive: false,
+      );
+      final text = [
+        pack.title,
+        pack.theme.name,
+        for (final prompt in pack.prompts) ...[
+          prompt.prompt,
+          prompt.feedback,
+          for (final answer in prompt.answers) answer.label,
+        ],
+      ].join(' ');
+
+      expect(forbiddenWords.hasMatch(text), isFalse);
     });
   });
 }
