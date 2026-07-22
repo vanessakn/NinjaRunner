@@ -33,6 +33,34 @@ void main() {
     expect(controller.state.phase, RunnerPhase.feedback);
   });
 
+  test('second answer during feedback does not change state or analytics', () {
+    final logger = AnalyticsLogger();
+    final controller = RunnerController(
+      contentPack: sampleContentPack(),
+      analyticsLogger: logger,
+    )..startRound();
+
+    controller.selectAnswer('share');
+    final eventCount = logger.events.length;
+    final score = controller.state.score;
+    final streak = controller.state.streak;
+
+    expect(
+      () => controller.selectAnswer('share'),
+      throwsA(
+        isA<StateError>().having(
+          (error) => error.message,
+          'message',
+          'Answers can only be selected while running.',
+        ),
+      ),
+    );
+
+    expect(controller.state.score, score);
+    expect(controller.state.streak, streak);
+    expect(logger.events.length, eventCount);
+  });
+
   test('incorrect answer resets streak and keeps score', () {
     final controller = RunnerController(
       contentPack: sampleContentPack(),
@@ -45,6 +73,33 @@ void main() {
     expect(controller.state.score, 0);
     expect(controller.state.streak, 0);
     expect(result.feedback, 'Nice choice! Sharing helps your friends.');
+  });
+
+  test('unknown answer while running is rejected without state or analytics changes',
+      () {
+    final logger = AnalyticsLogger();
+    final controller = RunnerController(
+      contentPack: sampleContentPack(),
+      analyticsLogger: logger,
+    )..startRound();
+    final state = controller.state;
+    final eventCount = logger.events.length;
+
+    expect(
+      () => controller.selectAnswer('missing-answer'),
+      throwsA(
+        isA<ArgumentError>()
+            .having((error) => error.name, 'name', 'answerId')
+            .having(
+              (error) => error.message,
+              'message',
+              'Answer is not available for the current prompt.',
+            ),
+      ),
+    );
+
+    expect(controller.state, same(state));
+    expect(logger.events.length, eventCount);
   });
 
   test('advances through five prompts and completes the round', () {

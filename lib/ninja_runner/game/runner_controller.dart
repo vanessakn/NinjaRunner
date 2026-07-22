@@ -50,10 +50,6 @@ class RunnerGameState {
   final double runnerProgress;
   final RunnerSelectionResult? lastResult;
 
-  RunnerPrompt get currentPrompt {
-    throw StateError('Use RunnerController.currentPrompt for prompt access.');
-  }
-
   RunnerGameState copyWith({
     RunnerPhase? phase,
     int? currentPromptIndex,
@@ -113,7 +109,19 @@ class RunnerController {
   }
 
   RunnerSelectionResult selectAnswer(String answerId) {
+    if (state.phase != RunnerPhase.running) {
+      throw StateError('Answers can only be selected while running.');
+    }
+
     final prompt = currentPrompt;
+    if (!prompt.answers.any((answer) => answer.id == answerId)) {
+      throw ArgumentError.value(
+        answerId,
+        'answerId',
+        'Answer is not available for the current prompt.',
+      );
+    }
+
     final isCorrect = answerId == prompt.correctAnswerId;
     final result = RunnerSelectionResult(
       selectedAnswerId: answerId,
