@@ -26,7 +26,7 @@ class _NinjaRunnerScreenState extends State<NinjaRunnerScreen>
       contentPack: sampleContentPack(),
       analyticsLogger: AnalyticsLogger(),
     );
-    _ticker = createTicker(_handleTick)..start();
+    _ticker = createTicker(_handleTick);
   }
 
   @override
@@ -36,6 +36,11 @@ class _NinjaRunnerScreenState extends State<NinjaRunnerScreen>
   }
 
   void _handleTick(Duration elapsed) {
+    if (_controller.state.phase != RunnerPhase.running) {
+      _stopTicker();
+      return;
+    }
+
     final lastTick = _lastTick;
     _lastTick = elapsed;
     if (lastTick == null) {
@@ -101,10 +106,16 @@ class _NinjaRunnerScreenState extends State<NinjaRunnerScreen>
 
   void _startRound() {
     setState(_controller.startRound);
+    _startTicker();
   }
 
   void _continueAfterFeedback() {
     setState(_controller.continueAfterFeedback);
+    if (_controller.state.phase == RunnerPhase.running) {
+      _startTicker();
+    } else {
+      _stopTicker();
+    }
   }
 
   void _handleTap(Offset position, double width) {
@@ -127,6 +138,23 @@ class _NinjaRunnerScreenState extends State<NinjaRunnerScreen>
     setState(() {
       _controller.selectAnswer(answers[index].id);
     });
+    if (_controller.state.phase != RunnerPhase.running) {
+      _stopTicker();
+    }
+  }
+
+  void _startTicker() {
+    _lastTick = null;
+    if (!_ticker.isActive) {
+      _ticker.start();
+    }
+  }
+
+  void _stopTicker() {
+    if (_ticker.isActive) {
+      _ticker.stop();
+    }
+    _lastTick = null;
   }
 }
 

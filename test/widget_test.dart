@@ -9,4 +9,16 @@ void main() {
     expect(find.text('Start Run'), findsOneWidget);
     expect(find.text('Jordan'), findsOneWidget);
   });
+
+  testWidgets('start screen settles while idle', (tester) async {
+    await tester.pumpWidget(const KidNationMobileGamesApp());
+
+    await tester.pumpAndSettle(
+      const Duration(milliseconds: 16),
+      EnginePhase.sendSemanticsUpdate,
+      const Duration(milliseconds: 200),
+    );
+
+    expect(find.text('Start Run'), findsOneWidget);
+  });
 }
