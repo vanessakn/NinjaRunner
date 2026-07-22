@@ -1,2 +1,4 @@
 .superpowers/
 .worktrees/
+.dart_tool/
+build/
