@@ -92,6 +92,10 @@ class RunnerPrompt {
 
   factory RunnerPrompt.fromJson(Map<String, Object?> json) {
     final answers = _list(json, 'answers').map(RunnerAnswer.fromJson).toList();
+    if (answers.length != 2) {
+      throw const FormatException('Runner prompts must include exactly two answers.');
+    }
+
     final correctAnswerId = _string(json, 'correctAnswerId');
     if (!answers.any((answer) => answer.id == correctAnswerId)) {
       throw FormatException('Correct answer "$correctAnswerId" is missing.');

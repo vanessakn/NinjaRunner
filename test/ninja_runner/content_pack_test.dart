@@ -100,6 +100,66 @@ void main() {
       );
     });
 
+    test('rejects prompts without exactly two answers', () {
+      expect(
+        () => ContentPack.fromJson({
+          'id': 'one-answer-pack',
+          'title': 'One Answer Pack',
+          'minAge': 5,
+          'maxAge': 8,
+          'theme': {
+            'id': 'argentina-arena',
+            'name': 'Argentina Arena',
+            'primaryColor': 0xFF5CB8E4,
+            'secondaryColor': 0xFFFFFFFF,
+          },
+          'runner': {'id': 'bjorn', 'name': 'Bjorn'},
+          'prompts': [
+            {
+              'id': 'one-answer',
+              'prompt': 'Choose one.',
+              'correctAnswerId': 'kind',
+              'feedback': 'Kind is a good choice.',
+              'answers': [
+                {'id': 'kind', 'label': 'kind'},
+              ],
+            },
+          ],
+        }),
+        throwsA(isA<FormatException>()),
+      );
+
+      expect(
+        () => ContentPack.fromJson({
+          'id': 'three-answer-pack',
+          'title': 'Three Answer Pack',
+          'minAge': 5,
+          'maxAge': 8,
+          'theme': {
+            'id': 'portugal-arena',
+            'name': 'Portugal Arena',
+            'primaryColor': 0xFFE53B44,
+            'secondaryColor': 0xFF2AA757,
+          },
+          'runner': {'id': 'arjun', 'name': 'Arjun'},
+          'prompts': [
+            {
+              'id': 'three-answer',
+              'prompt': 'Choose one.',
+              'correctAnswerId': 'kind',
+              'feedback': 'Kind is a good choice.',
+              'answers': [
+                {'id': 'kind', 'label': 'kind'},
+                {'id': 'loud', 'label': 'loud'},
+                {'id': 'sleepy', 'label': 'sleepy'},
+              ],
+            },
+          ],
+        }),
+        throwsA(isA<FormatException>()),
+      );
+    });
+
     test('sample pack uses KNSoccer cast and avoids soccer mechanics', () {
       final pack = sampleContentPack();
 
