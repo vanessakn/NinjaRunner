@@ -62,4 +62,24 @@ void main() {
     expect(controller.state.score, 5);
     expect(controller.state.currentPromptIndex, 4);
   });
+
+  test('summary transition clears feedback result and resets progress', () {
+    final controller = RunnerController(
+      contentPack: sampleContentPack(),
+      analyticsLogger: AnalyticsLogger(),
+    )..startRound();
+
+    for (final answerId in ['share', 'gentle', 'try', 'listen']) {
+      controller.selectAnswer(answerId);
+      controller.continueAfterFeedback();
+    }
+
+    controller.tick(1);
+    controller.selectAnswer('cheer');
+    controller.continueAfterFeedback();
+
+    expect(controller.state.phase, RunnerPhase.summary);
+    expect(controller.state.runnerProgress, 0);
+    expect(controller.state.lastResult, isNull);
+  });
 }

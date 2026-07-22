@@ -156,7 +156,11 @@ class RunnerController {
     }
     final nextIndex = state.currentPromptIndex + 1;
     if (nextIndex >= contentPack.prompts.length) {
-      state = state.copyWith(phase: RunnerPhase.summary);
+      state = state.copyWith(
+        phase: RunnerPhase.summary,
+        runnerProgress: 0,
+        clearLastResult: true,
+      );
       analyticsLogger.track(
         AnalyticsEvent.roundComplete,
         payload: {
