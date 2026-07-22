@@ -241,7 +241,7 @@ class RunnerPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant RunnerPainter oldDelegate) {
     return oldDelegate.state != state ||
-        oldDelegate.currentPrompt.id != currentPrompt.id ||
-        oldDelegate.contentPack.id != contentPack.id;
+        oldDelegate.currentPrompt != currentPrompt ||
+        oldDelegate.contentPack != contentPack;
   }
 }
