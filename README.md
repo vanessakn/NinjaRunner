@@ -18,6 +18,15 @@ flutter pub get
 flutter run
 ```
 
+## Impeller Builds
+
+Flutter 3.44 uses Impeller by default on iOS and Android API 29+. The Android
+manifest explicitly opts into Impeller with
+`io.flutter.embedding.android.EnableImpeller=true`.
+
+iOS uses Impeller as its only supported Flutter rendering engine, so no opt-in
+flag is needed for iOS builds.
+
 ## Test
 
 ```bash
