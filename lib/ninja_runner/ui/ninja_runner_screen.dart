@@ -337,16 +337,18 @@ class _Controls extends StatelessWidget {
         RunnerPhase.running => Row(
             children: [
               Expanded(
-                child: FilledButton(
+                child: FilledButton.icon(
                   onPressed: () => onAnswer(0),
-                  child: Text(controller.currentPrompt.answers[0].label),
+                  icon: const Icon(Icons.keyboard_arrow_left_rounded),
+                  label: Text(controller.currentPrompt.answers[0].label),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: FilledButton(
+                child: FilledButton.icon(
                   onPressed: () => onAnswer(1),
-                  child: Text(controller.currentPrompt.answers[1].label),
+                  icon: const Icon(Icons.keyboard_arrow_right_rounded),
+                  label: Text(controller.currentPrompt.answers[1].label),
                 ),
               ),
             ],
@@ -458,14 +460,41 @@ class _LevelChoice extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        ChoiceChip(
-          label: Text(level.name),
-          selected: isSelected,
-          onSelected: isUnlocked ? (_) => onSelect() : null,
+        Container(
+          padding: const EdgeInsets.fromLTRB(8, 6, 8, 6),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? Theme.of(context).colorScheme.primaryContainer
+                : Colors.white.withValues(alpha: 0.64),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: isSelected
+                  ? Theme.of(context).colorScheme.primary
+                  : const Color(0xFF151515).withValues(alpha: 0.08),
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ChoiceChip(
+                label: Text(level.name),
+                selected: isSelected,
+                onSelected: isUnlocked ? (_) => onSelect() : null,
+              ),
+              Text(
+                status,
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+              ),
+              if (bestScore != null)
+                Text(
+                  'Best: $bestScore/${level.contentPack.prompts.length}',
+                  style: Theme.of(context).textTheme.labelSmall,
+                ),
+            ],
+          ),
         ),
-        Text(status),
-        if (bestScore != null)
-          Text('Best: $bestScore/${level.contentPack.prompts.length}'),
       ],
     );
   }
