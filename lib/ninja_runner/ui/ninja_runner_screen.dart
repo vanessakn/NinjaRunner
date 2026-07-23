@@ -28,6 +28,7 @@ class _NinjaRunnerScreenState extends State<NinjaRunnerScreen>
   late final LevelProgressStore _progressStore;
   var _selectedLevelIndex = 0;
   var _highestUnlockedLevelIndex = 0;
+  var _bestScoresByLevelId = <String, int>{};
   Duration? _lastTick;
 
   @override
@@ -107,6 +108,7 @@ class _NinjaRunnerScreenState extends State<NinjaRunnerScreen>
                   levels: _levels,
                   selectedLevelIndex: _selectedLevelIndex,
                   highestUnlockedLevelIndex: _highestUnlockedLevelIndex,
+                  bestScoresByLevelId: _bestScoresByLevelId,
                   onStart: _startRound,
                   onContinue: _continueAfterFeedback,
                   onAnswer: _chooseAnswer,
@@ -140,7 +142,11 @@ class _NinjaRunnerScreenState extends State<NinjaRunnerScreen>
   }
 
   void _continueAfterFeedback() {
+    final wasRunning = _controller.state.phase == RunnerPhase.feedback;
     setState(_controller.continueAfterFeedback);
+    if (wasRunning && _controller.state.phase == RunnerPhase.summary) {
+      _saveBestScoreForCurrentLevel();
+    }
     if (_controller.state.phase == RunnerPhase.running) {
       _startTicker();
     } else {
@@ -206,12 +212,30 @@ class _NinjaRunnerScreenState extends State<NinjaRunnerScreen>
 
   Future<void> _restoreProgress() async {
     final savedIndex = await _progressStore.loadHighestUnlockedLevelIndex();
+    final bestScores = await _progressStore.loadBestScoresByLevelId();
     if (!mounted) {
       return;
     }
     setState(() {
       _highestUnlockedLevelIndex = savedIndex.clamp(0, _levels.length - 1);
+      _bestScoresByLevelId = bestScores;
     });
+  }
+
+  void _saveBestScoreForCurrentLevel() {
+    final levelId = _controller.level.id;
+    final score = _controller.state.score;
+    final bestScore = _bestScoresByLevelId[levelId] ?? 0;
+    if (score <= bestScore) {
+      return;
+    }
+    setState(() {
+      _bestScoresByLevelId = {
+        ..._bestScoresByLevelId,
+        levelId: score,
+      };
+    });
+    _progressStore.saveBestScore(levelId: levelId, score: score);
   }
 
   RunnerController _createController(NinjaRunnerLevel level) {
@@ -268,6 +292,7 @@ class _Controls extends StatelessWidget {
     required this.levels,
     required this.selectedLevelIndex,
     required this.highestUnlockedLevelIndex,
+    required this.bestScoresByLevelId,
     required this.onStart,
     required this.onContinue,
     required this.onAnswer,
@@ -279,6 +304,7 @@ class _Controls extends StatelessWidget {
   final List<NinjaRunnerLevel> levels;
   final int selectedLevelIndex;
   final int highestUnlockedLevelIndex;
+  final Map<String, int> bestScoresByLevelId;
   final VoidCallback onStart;
   final VoidCallback onContinue;
   final ValueChanged<int> onAnswer;
@@ -298,6 +324,7 @@ class _Controls extends StatelessWidget {
                 levels: levels,
                 selectedLevelIndex: selectedLevelIndex,
                 highestUnlockedLevelIndex: highestUnlockedLevelIndex,
+                bestScoresByLevelId: bestScoresByLevelId,
                 onSelectLevel: onSelectLevel,
               ),
               const SizedBox(height: 12),
@@ -344,6 +371,11 @@ class _Controls extends StatelessWidget {
                 '- Need ${controller.level.requiredScore}',
                 textAlign: TextAlign.center,
               ),
+              Text(
+                'Best: ${bestScoresByLevelId[controller.level.id] ?? state.score}'
+                '/${controller.contentPack.prompts.length}',
+                textAlign: TextAlign.center,
+              ),
               const SizedBox(height: 10),
               if (controller.isLevelComplete &&
                   selectedLevelIndex < levels.length - 1)
@@ -369,12 +401,14 @@ class _LevelChoices extends StatelessWidget {
     required this.levels,
     required this.selectedLevelIndex,
     required this.highestUnlockedLevelIndex,
+    required this.bestScoresByLevelId,
     required this.onSelectLevel,
   });
 
   final List<NinjaRunnerLevel> levels;
   final int selectedLevelIndex;
   final int highestUnlockedLevelIndex;
+  final Map<String, int> bestScoresByLevelId;
   final ValueChanged<int> onSelectLevel;
 
   @override
@@ -384,19 +418,54 @@ class _LevelChoices extends StatelessWidget {
       runSpacing: 8,
       children: [
         for (var index = 0; index < levels.length; index++) ...[
-          ChoiceChip(
-            label: Text(levels[index].name),
-            selected: index == selectedLevelIndex,
-            onSelected: index <= highestUnlockedLevelIndex
-                ? (_) => onSelectLevel(index)
-                : null,
+          _LevelChoice(
+            level: levels[index],
+            isSelected: index == selectedLevelIndex,
+            isUnlocked: index <= highestUnlockedLevelIndex,
+            bestScore: bestScoresByLevelId[levels[index].id],
+            onSelect: () => onSelectLevel(index),
           ),
-          if (index > highestUnlockedLevelIndex)
-            const Padding(
-              padding: EdgeInsets.only(right: 4),
-              child: Text('Locked'),
-            ),
         ],
+      ],
+    );
+  }
+}
+
+class _LevelChoice extends StatelessWidget {
+  const _LevelChoice({
+    required this.level,
+    required this.isSelected,
+    required this.isUnlocked,
+    required this.bestScore,
+    required this.onSelect,
+  });
+
+  final NinjaRunnerLevel level;
+  final bool isSelected;
+  final bool isUnlocked;
+  final int? bestScore;
+  final VoidCallback onSelect;
+
+  bool get isComplete => bestScore != null && level.isComplete(bestScore!);
+
+  @override
+  Widget build(BuildContext context) {
+    final status = isUnlocked
+        ? isComplete
+            ? 'Complete'
+            : 'Unlocked'
+        : 'Locked';
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ChoiceChip(
+          label: Text(level.name),
+          selected: isSelected,
+          onSelected: isUnlocked ? (_) => onSelect() : null,
+        ),
+        Text(status),
+        if (bestScore != null)
+          Text('Best: $bestScore/${level.contentPack.prompts.length}'),
       ],
     );
   }

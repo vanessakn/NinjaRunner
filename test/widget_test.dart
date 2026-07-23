@@ -12,6 +12,7 @@ void main() {
     expect(find.text('Warm-Up Dash'), findsOneWidget);
     expect(find.text('Quick Choice Dash'), findsOneWidget);
     expect(find.text('Star Streak Challenge'), findsOneWidget);
+    expect(find.text('Unlocked'), findsOneWidget);
     expect(find.text('Locked'), findsNWidgets(2));
     expect(find.text('Start Run'), findsOneWidget);
     expect(find.text('Jordan'), findsOneWidget);
@@ -96,6 +97,45 @@ void main() {
     await tester.pump();
 
     expect(progressStore.highestUnlockedLevelIndex, 1);
+  });
+
+  testWidgets('restores best scores and complete states from progress',
+      (tester) async {
+    final progressStore = MemoryLevelProgressStore(
+      initialHighestUnlockedLevelIndex: 1,
+      initialBestScoresByLevelId: {'warm-up-dash': 5},
+    );
+
+    await pumpNinjaRunner(tester, progressStore: progressStore);
+
+    expect(find.text('Complete'), findsOneWidget);
+    expect(find.text('Unlocked'), findsOneWidget);
+    expect(find.text('Locked'), findsOneWidget);
+    expect(find.text('Best: 5/5'), findsOneWidget);
+  });
+
+  testWidgets('saves best score without lowering it on replay', (tester) async {
+    final progressStore = MemoryLevelProgressStore(
+      initialBestScoresByLevelId: {'warm-up-dash': 4},
+    );
+
+    await pumpNinjaRunner(tester, progressStore: progressStore);
+
+    await tester.tap(find.text('Start Run'));
+    await tester.pump();
+
+    for (final answer in ['share', 'bossy', 'hide forever', 'listen', 'tease']) {
+      await tester.tap(find.text(answer));
+      await tester.pump();
+      final keepRunning = find.text('Keep Running');
+      if (keepRunning.evaluate().isNotEmpty) {
+        await tester.tap(keepRunning);
+        await tester.pump();
+      }
+    }
+
+    expect(progressStore.bestScoresByLevelId['warm-up-dash'], 4);
+    expect(find.text('Best: 4/5'), findsOneWidget);
   });
 
   testWidgets('start screen settles while idle', (tester) async {

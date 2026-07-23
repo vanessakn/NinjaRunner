@@ -9,7 +9,8 @@ Flutter prototypes for KidNation learning games.
 It does not reuse the KNSoccer soccer-match concept or mechanics.
 
 Level unlock progress is saved locally, so unlocked runs stay available after
-the app restarts.
+the app restarts. Best scores are saved per level and shown in the level select
+and round summary.
 
 ## Run
 

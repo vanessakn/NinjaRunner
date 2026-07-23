@@ -4,6 +4,13 @@ abstract class LevelProgressStore {
   Future<int> loadHighestUnlockedLevelIndex();
 
   Future<void> saveHighestUnlockedLevelIndex(int index);
+
+  Future<Map<String, int>> loadBestScoresByLevelId();
+
+  Future<void> saveBestScore({
+    required String levelId,
+    required int score,
+  });
 }
 
 class SharedPreferencesLevelProgressStore implements LevelProgressStore {
@@ -13,6 +20,7 @@ class SharedPreferencesLevelProgressStore implements LevelProgressStore {
 
   static const _highestUnlockedLevelKey =
       'ninja_runner_highest_unlocked_level_index';
+  static const _bestScoreKeyPrefix = 'ninja_runner_best_score_';
 
   final SharedPreferencesAsync _preferences;
 
@@ -32,14 +40,44 @@ class SharedPreferencesLevelProgressStore implements LevelProgressStore {
       index < 0 ? 0 : index,
     );
   }
+
+  @override
+  Future<Map<String, int>> loadBestScoresByLevelId() async {
+    final keys = await _preferences.getKeys();
+    final scores = <String, int>{};
+    for (final key in keys) {
+      if (!key.startsWith(_bestScoreKeyPrefix)) {
+        continue;
+      }
+      final score = await _preferences.getInt(key);
+      if (score != null && score >= 0) {
+        scores[key.substring(_bestScoreKeyPrefix.length)] = score;
+      }
+    }
+    return scores;
+  }
+
+  @override
+  Future<void> saveBestScore({
+    required String levelId,
+    required int score,
+  }) {
+    return _preferences.setInt(
+      '$_bestScoreKeyPrefix$levelId',
+      score < 0 ? 0 : score,
+    );
+  }
 }
 
 class MemoryLevelProgressStore implements LevelProgressStore {
   MemoryLevelProgressStore({
     int initialHighestUnlockedLevelIndex = 0,
-  }) : highestUnlockedLevelIndex = initialHighestUnlockedLevelIndex;
+    Map<String, int> initialBestScoresByLevelId = const {},
+  })  : highestUnlockedLevelIndex = initialHighestUnlockedLevelIndex,
+        bestScoresByLevelId = Map.of(initialBestScoresByLevelId);
 
   int highestUnlockedLevelIndex;
+  final Map<String, int> bestScoresByLevelId;
 
   @override
   Future<int> loadHighestUnlockedLevelIndex() async {
@@ -49,5 +87,18 @@ class MemoryLevelProgressStore implements LevelProgressStore {
   @override
   Future<void> saveHighestUnlockedLevelIndex(int index) async {
     highestUnlockedLevelIndex = index;
+  }
+
+  @override
+  Future<Map<String, int>> loadBestScoresByLevelId() async {
+    return Map.of(bestScoresByLevelId);
+  }
+
+  @override
+  Future<void> saveBestScore({
+    required String levelId,
+    required int score,
+  }) async {
+    bestScoresByLevelId[levelId] = score;
   }
 }
