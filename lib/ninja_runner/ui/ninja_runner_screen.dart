@@ -3,12 +3,18 @@ import 'package:flutter/scheduler.dart';
 
 import '../analytics/analytics_logger.dart';
 import '../data/sample_content_pack.dart';
+import '../game/level_progress_store.dart';
 import '../game/runner_controller.dart';
 import '../models/ninja_runner_level.dart';
 import '../rendering/runner_painter.dart';
 
 class NinjaRunnerScreen extends StatefulWidget {
-  const NinjaRunnerScreen({super.key});
+  const NinjaRunnerScreen({
+    super.key,
+    this.progressStore,
+  });
+
+  final LevelProgressStore? progressStore;
 
   @override
   State<NinjaRunnerScreen> createState() => _NinjaRunnerScreenState();
@@ -19,6 +25,7 @@ class _NinjaRunnerScreenState extends State<NinjaRunnerScreen>
   late final List<NinjaRunnerLevel> _levels;
   late RunnerController _controller;
   late final Ticker _ticker;
+  late final LevelProgressStore _progressStore;
   var _selectedLevelIndex = 0;
   var _highestUnlockedLevelIndex = 0;
   Duration? _lastTick;
@@ -27,8 +34,11 @@ class _NinjaRunnerScreenState extends State<NinjaRunnerScreen>
   void initState() {
     super.initState();
     _levels = sampleNinjaRunnerLevels();
+    _progressStore =
+        widget.progressStore ?? SharedPreferencesLevelProgressStore();
     _controller = _createController(_levels[_selectedLevelIndex]);
     _ticker = createTicker(_handleTick);
+    _restoreProgress();
   }
 
   @override
@@ -190,7 +200,18 @@ class _NinjaRunnerScreenState extends State<NinjaRunnerScreen>
       _controller = _createController(_levels[nextIndex]);
       _controller.startRound();
     });
+    _progressStore.saveHighestUnlockedLevelIndex(_highestUnlockedLevelIndex);
     _startTicker();
+  }
+
+  Future<void> _restoreProgress() async {
+    final savedIndex = await _progressStore.loadHighestUnlockedLevelIndex();
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _highestUnlockedLevelIndex = savedIndex.clamp(0, _levels.length - 1);
+    });
   }
 
   RunnerController _createController(NinjaRunnerLevel level) {

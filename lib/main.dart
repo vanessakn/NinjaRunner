@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'ninja_runner/game/level_progress_store.dart';
 import 'ninja_runner/ui/ninja_runner_screen.dart';
 
 void main() {
@@ -7,7 +8,12 @@ void main() {
 }
 
 class KidNationMobileGamesApp extends StatelessWidget {
-  const KidNationMobileGamesApp({super.key});
+  const KidNationMobileGamesApp({
+    super.key,
+    this.progressStore,
+  });
+
+  final LevelProgressStore? progressStore;
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +33,7 @@ class KidNationMobileGamesApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-      home: const NinjaRunnerScreen(),
+      home: NinjaRunnerScreen(progressStore: progressStore),
     );
   }
 }

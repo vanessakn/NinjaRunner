@@ -8,6 +8,9 @@ Flutter prototypes for KidNation learning games.
 
 It does not reuse the KNSoccer soccer-match concept or mechanics.
 
+Level unlock progress is saved locally, so unlocked runs stay available after
+the app restarts.
+
 ## Run
 
 ```bash
