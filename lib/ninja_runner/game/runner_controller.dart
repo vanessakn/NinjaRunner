@@ -97,6 +97,20 @@ class RunnerController {
 
   bool get isLevelComplete => level.isComplete(state.score);
 
+  bool get isPerfectRun =>
+      state.phase == RunnerPhase.summary &&
+      state.score == contentPack.prompts.length;
+
+  String get roundResultTitle {
+    if (isPerfectRun) {
+      return 'Perfect run!';
+    }
+    if (isLevelComplete) {
+      return 'Level Complete!';
+    }
+    return 'Try Again';
+  }
+
   void startRound() {
     state = RunnerGameState.initial().copyWith(phase: RunnerPhase.running);
     analyticsLogger.track(

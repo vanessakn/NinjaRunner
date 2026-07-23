@@ -171,4 +171,19 @@ void main() {
     expect(controller.isLevelComplete, isTrue);
     expect(logger.events.last.payload, containsPair('level_complete', true));
   });
+
+  test('perfect Level 1 round exposes a kid-friendly result title', () {
+    final controller = RunnerController(
+      level: sampleNinjaRunnerLevels().first,
+      analyticsLogger: AnalyticsLogger(),
+    )..startRound();
+
+    for (final answerId in ['share', 'gentle', 'try', 'listen', 'cheer']) {
+      controller.selectAnswer(answerId);
+      controller.continueAfterFeedback();
+    }
+
+    expect(controller.isPerfectRun, isTrue);
+    expect(controller.roundResultTitle, 'Perfect run!');
+  });
 }

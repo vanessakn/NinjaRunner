@@ -24,6 +24,13 @@ List<NinjaRunnerLevel> sampleNinjaRunnerLevels() {
       requiredScore: 5,
       contentPack: _starStreakPack(),
     ),
+    NinjaRunnerLevel(
+      id: 'friendship-focus-dash',
+      name: 'Friendship Focus Dash',
+      runnerSpeed: 0.34,
+      requiredScore: 5,
+      contentPack: _friendshipFocusPack(),
+    ),
   ];
 }
 
@@ -240,6 +247,79 @@ ContentPack _starStreakPack() {
         'answers': [
           {'id': 'you-can', 'label': 'you can do it'},
           {'id': 'too-hard', 'label': 'too hard'},
+        ],
+      },
+    ],
+  });
+}
+
+ContentPack _friendshipFocusPack() {
+  return ContentPack.fromJson({
+    'id': 'kidnation-cup-friendship-focus',
+    'title': 'KidNation Cup Friendship Focus',
+    'minAge': 5,
+    'maxAge': 8,
+    'theme': {
+      'id': 'argentina-arena',
+      'name': 'Argentina Arena',
+      'primaryColor': 0xFF5CB8E4,
+      'secondaryColor': 0xFFFFFFFF,
+      'backgroundAssetId': 'theme-argentina-arena-placeholder',
+    },
+    'runner': {
+      'id': 'bjorn',
+      'name': 'Bjorn',
+      'portraitAssetId': 'character-bjorn-placeholder',
+    },
+    'prompts': [
+      {
+        'id': 'include-friend',
+        'prompt': 'Who should Bjorn invite?',
+        'correctAnswerId': 'new-friend',
+        'feedback': 'Inviting a new friend helps everyone feel welcome.',
+        'answers': [
+          {'id': 'new-friend', 'label': 'new friend'},
+          {'id': 'same-friend', 'label': 'same friend'},
+        ],
+      },
+      {
+        'id': 'ask-help',
+        'prompt': 'Pick the helpful words.',
+        'correctAnswerId': 'help-please',
+        'feedback': 'Asking kindly for help is a strong choice.',
+        'answers': [
+          {'id': 'help-please', 'label': 'help please'},
+          {'id': 'do-it', 'label': 'do it now'},
+        ],
+      },
+      {
+        'id': 'calm-body',
+        'prompt': 'What helps a busy body?',
+        'correctAnswerId': 'slow-breath',
+        'feedback': 'A slow breath can help your body feel ready.',
+        'answers': [
+          {'id': 'slow-breath', 'label': 'slow breath'},
+          {'id': 'fast-feet', 'label': 'fast feet'},
+        ],
+      },
+      {
+        'id': 'take-turn',
+        'prompt': 'Choose the fair play choice.',
+        'correctAnswerId': 'your-turn',
+        'feedback': 'Letting someone have a turn keeps play fair.',
+        'answers': [
+          {'id': 'your-turn', 'label': 'your turn'},
+          {'id': 'my-turn', 'label': 'my turn only'},
+        ],
+      },
+      {
+        'id': 'friend-feelings',
+        'prompt': 'What should Bjorn ask?',
+        'correctAnswerId': 'are-you-ok',
+        'feedback': 'Checking on feelings shows you care.',
+        'answers': [
+          {'id': 'are-you-ok', 'label': 'are you ok?'},
+          {'id': 'why-sad', 'label': 'why sad?'},
         ],
       },
     ],

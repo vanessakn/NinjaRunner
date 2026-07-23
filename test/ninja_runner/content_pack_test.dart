@@ -201,6 +201,7 @@ void main() {
           'character-jordan-placeholder',
           'character-nari-placeholder',
           'character-arjun-placeholder',
+          'character-bjorn-placeholder',
         ],
       );
       expect(
@@ -209,6 +210,7 @@ void main() {
           'theme-brazil-arena-placeholder',
           'theme-france-arena-placeholder',
           'theme-portugal-arena-placeholder',
+          'theme-argentina-arena-placeholder',
         ],
       );
     });

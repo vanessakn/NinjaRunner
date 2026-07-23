@@ -77,7 +77,10 @@ class _NinjaRunnerScreenState extends State<NinjaRunnerScreen>
           builder: (context, constraints) {
             return Column(
               children: [
-                _Header(controller: _controller),
+                _Header(
+                  controller: _controller,
+                  levelNumber: _selectedLevelIndex + 1,
+                ),
                 Expanded(
                   child: GestureDetector(
                     behavior: HitTestBehavior.opaque,
@@ -94,6 +97,7 @@ class _NinjaRunnerScreenState extends State<NinjaRunnerScreen>
                       }
                     },
                     child: CustomPaint(
+                      key: const Key('runner-playfield'),
                       painter: RunnerPainter(
                         contentPack: _controller.contentPack,
                         state: state,
@@ -158,7 +162,7 @@ class _NinjaRunnerScreenState extends State<NinjaRunnerScreen>
     if (_controller.state.phase != RunnerPhase.running) {
       return;
     }
-    _chooseAnswer(position.dx < width * 0.73 ? 0 : 1);
+    _chooseAnswer(position.dx < width / 2 ? 0 : 1);
   }
 
   void _chooseAnswer(int index) {
@@ -247,15 +251,19 @@ class _NinjaRunnerScreenState extends State<NinjaRunnerScreen>
 }
 
 class _Header extends StatelessWidget {
-  const _Header({required this.controller});
+  const _Header({
+    required this.controller,
+    required this.levelNumber,
+  });
 
   final RunnerController controller;
+  final int levelNumber;
 
   @override
   Widget build(BuildContext context) {
     final pack = controller.contentPack;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
       child: Row(
         children: [
           Expanded(
@@ -268,9 +276,38 @@ class _Header extends StatelessWidget {
                         fontWeight: FontWeight.w900,
                       ),
                 ),
-                Text(pack.runner.name),
-                Text('${controller.level.name} - ${pack.theme.name}'),
-                Text(pack.ageRangeLabel),
+                const SizedBox(height: 2),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 2,
+                  children: [
+                    Text('Level $levelNumber'),
+                    Text(
+                      'Runner Mode',
+                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                            fontWeight: FontWeight.w900,
+                          ),
+                    ),
+                    Text(pack.runner.name),
+                  ],
+                ),
+                Text(
+                  'Help ${pack.runner.name} choose the kind gate.',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                ),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 2,
+                  children: [
+                    Text('${controller.level.name} - ${pack.theme.name}'),
+                    Text('${pack.prompts.length} quick choices'),
+                    Text(pack.ageRangeLabel),
+                  ],
+                ),
               ],
             ),
           ),
@@ -315,7 +352,7 @@ class _Controls extends StatelessWidget {
   Widget build(BuildContext context) {
     final state = controller.state;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
       child: switch (state.phase) {
         RunnerPhase.ready => Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -327,47 +364,112 @@ class _Controls extends StatelessWidget {
                 bestScoresByLevelId: bestScoresByLevelId,
                 onSelectLevel: onSelectLevel,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
               FilledButton(
                 onPressed: onStart,
                 child: const Text('Start Run'),
               ),
             ],
           ),
-        RunnerPhase.running => Row(
+        RunnerPhase.running => Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Expanded(
-                child: FilledButton.icon(
-                  onPressed: () => onAnswer(0),
-                  icon: const Icon(Icons.keyboard_arrow_left_rounded),
-                  label: Text(controller.currentPrompt.answers[0].label),
-                ),
+              Text(
+                'Choose a gate',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                      fontWeight: FontWeight.w900,
+                    ),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: FilledButton.icon(
-                  onPressed: () => onAnswer(1),
-                  icon: const Icon(Icons.keyboard_arrow_right_rounded),
-                  label: Text(controller.currentPrompt.answers[1].label),
-                ),
+              const SizedBox(height: 2),
+              Text(
+                'Run up the lane',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                'Collect stars by choosing kind gates',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.labelMedium,
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Streak ${state.streak}',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                      fontWeight: FontWeight.w900,
+                    ),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: FilledButton.icon(
+                      onPressed: () => onAnswer(0),
+                      icon: const Icon(Icons.keyboard_arrow_left_rounded),
+                      label: Text(controller.currentPrompt.answers[0].label),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: FilledButton.icon(
+                      onPressed: () => onAnswer(1),
+                      icon: const Icon(Icons.keyboard_arrow_right_rounded),
+                      label: Text(controller.currentPrompt.answers[1].label),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
-        RunnerPhase.feedback => FilledButton(
-            onPressed: onContinue,
-            child: const Text('Keep Running'),
+        RunnerPhase.feedback => Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                state.lastResult?.isCorrect == true
+                    ? 'Streak Boost!'
+                    : 'Slow down and try again',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                      fontWeight: FontWeight.w900,
+                    ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Streak ${state.streak}',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.labelMedium,
+              ),
+              const SizedBox(height: 8),
+              FilledButton(
+                onPressed: onContinue,
+                child: const Text('Keep Running'),
+              ),
+            ],
           ),
         RunnerPhase.summary => Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                controller.isLevelComplete ? 'Level Complete!' : 'Try Again',
+                controller.roundResultTitle,
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w900,
                     ),
               ),
               const SizedBox(height: 4),
+              if (controller.roundResultTitle != 'Level Complete!' &&
+                  controller.isLevelComplete)
+                Text(
+                  'Level Complete!',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                ),
               Text(
                 'Score: ${state.score}/${controller.contentPack.prompts.length} '
                 '- Need ${controller.level.requiredScore}',
@@ -415,20 +517,25 @@ class _LevelChoices extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: [
-        for (var index = 0; index < levels.length; index++) ...[
-          _LevelChoice(
-            level: levels[index],
-            isSelected: index == selectedLevelIndex,
-            isUnlocked: index <= highestUnlockedLevelIndex,
-            bestScore: bestScoresByLevelId[levels[index].id],
-            onSelect: () => onSelectLevel(index),
-          ),
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          for (var index = 0; index < levels.length; index++) ...[
+            Padding(
+              padding:
+                  EdgeInsets.only(right: index == levels.length - 1 ? 0 : 8),
+              child: _LevelChoice(
+                level: levels[index],
+                isSelected: index == selectedLevelIndex,
+                isUnlocked: index <= highestUnlockedLevelIndex,
+                bestScore: bestScoresByLevelId[levels[index].id],
+                onSelect: () => onSelectLevel(index),
+              ),
+            ),
+          ],
         ],
-      ],
+      ),
     );
   }
 }
@@ -460,39 +567,43 @@ class _LevelChoice extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Container(
-          padding: const EdgeInsets.fromLTRB(8, 6, 8, 6),
-          decoration: BoxDecoration(
-            color: isSelected
-                ? Theme.of(context).colorScheme.primaryContainer
-                : Colors.white.withValues(alpha: 0.64),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
+        SizedBox(
+          width: 166,
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(8, 6, 8, 6),
+            decoration: BoxDecoration(
               color: isSelected
-                  ? Theme.of(context).colorScheme.primary
-                  : const Color(0xFF151515).withValues(alpha: 0.08),
+                  ? Theme.of(context).colorScheme.primaryContainer
+                  : Colors.white.withValues(alpha: 0.64),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: isSelected
+                    ? Theme.of(context).colorScheme.primary
+                    : const Color(0xFF151515).withValues(alpha: 0.08),
+              ),
             ),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ChoiceChip(
-                label: Text(level.name),
-                selected: isSelected,
-                onSelected: isUnlocked ? (_) => onSelect() : null,
-              ),
-              Text(
-                status,
-                style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
-              ),
-              if (bestScore != null)
-                Text(
-                  'Best: $bestScore/${level.contentPack.prompts.length}',
-                  style: Theme.of(context).textTheme.labelSmall,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ChoiceChip(
+                  label: Text(level.name),
+                  selected: isSelected,
+                  onSelected: isUnlocked ? (_) => onSelect() : null,
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
-            ],
+                Text(
+                  status,
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                ),
+                if (bestScore != null)
+                  Text(
+                    'Best: $bestScore/${level.contentPack.prompts.length}',
+                    style: Theme.of(context).textTheme.labelSmall,
+                  ),
+              ],
+            ),
           ),
         ),
       ],

@@ -9,9 +9,10 @@ void main() {
       'Warm-Up Dash',
       'Quick Choice Dash',
       'Star Streak Challenge',
+      'Friendship Focus Dash',
     ]);
-    expect(levels.map((level) => level.runnerSpeed), [0.18, 0.24, 0.3]);
-    expect(levels.map((level) => level.requiredScore), [0, 4, 5]);
+    expect(levels.map((level) => level.runnerSpeed), [0.18, 0.24, 0.3, 0.34]);
+    expect(levels.map((level) => level.requiredScore), [0, 4, 5, 5]);
     expect(
         levels.every((level) => level.contentPack.prompts.length == 5), isTrue);
   });
@@ -24,5 +25,7 @@ void main() {
     expect(levels[1].isComplete(4), isTrue);
     expect(levels[2].isComplete(4), isFalse);
     expect(levels[2].isComplete(5), isTrue);
+    expect(levels[3].isComplete(4), isFalse);
+    expect(levels[3].isComplete(5), isTrue);
   });
 }
