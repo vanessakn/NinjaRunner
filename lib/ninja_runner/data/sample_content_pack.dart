@@ -38,8 +38,13 @@ ContentPack sampleContentPack() {
       'name': 'Brazil Arena',
       'primaryColor': 0xFF1BAA5D,
       'secondaryColor': 0xFFFFD23F,
+      'backgroundAssetId': 'theme-brazil-arena-placeholder',
     },
-    'runner': {'id': 'jordan', 'name': 'Jordan'},
+    'runner': {
+      'id': 'jordan',
+      'name': 'Jordan',
+      'portraitAssetId': 'character-jordan-placeholder',
+    },
     'prompts': [
       {
         'id': 'helpful-action',
@@ -106,8 +111,13 @@ ContentPack _quickChoicePack() {
       'name': 'France Arena',
       'primaryColor': 0xFF2867D4,
       'secondaryColor': 0xFFFFFFFF,
+      'backgroundAssetId': 'theme-france-arena-placeholder',
     },
-    'runner': {'id': 'nari', 'name': 'Nari'},
+    'runner': {
+      'id': 'nari',
+      'name': 'Nari',
+      'portraitAssetId': 'character-nari-placeholder',
+    },
     'prompts': [
       {
         'id': 'calm-choice',
@@ -174,8 +184,13 @@ ContentPack _starStreakPack() {
       'name': 'Portugal Arena',
       'primaryColor': 0xFFE53B44,
       'secondaryColor': 0xFF2AA757,
+      'backgroundAssetId': 'theme-portugal-arena-placeholder',
     },
-    'runner': {'id': 'arjun', 'name': 'Arjun'},
+    'runner': {
+      'id': 'arjun',
+      'name': 'Arjun',
+      'portraitAssetId': 'character-arjun-placeholder',
+    },
     'prompts': [
       {
         'id': 'kind-repair',

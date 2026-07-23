@@ -15,8 +15,13 @@ void main() {
           'name': 'Brazil Arena',
           'primaryColor': 0xFF1BAA5D,
           'secondaryColor': 0xFFFFD23F,
+          'backgroundAssetId': 'theme-brazil-arena-placeholder',
         },
-        'runner': {'id': 'jordan', 'name': 'Jordan'},
+        'runner': {
+          'id': 'jordan',
+          'name': 'Jordan',
+          'portraitAssetId': 'character-jordan-placeholder',
+        },
         'prompts': [
           {
             'id': 'helpful-action',
@@ -34,7 +39,9 @@ void main() {
       expect(pack.id, 'kidnation-cup-kindness');
       expect(pack.ageRangeLabel, 'Ages 5-8');
       expect(pack.theme.name, 'Brazil Arena');
+      expect(pack.theme.backgroundAssetId, 'theme-brazil-arena-placeholder');
       expect(pack.runner.name, 'Jordan');
+      expect(pack.runner.portraitAssetId, 'character-jordan-placeholder');
       expect(pack.prompts.single.correctAnswer.label, 'share');
     });
 
@@ -183,6 +190,27 @@ void main() {
       ].join(' ');
 
       expect(forbiddenWords.hasMatch(text), isFalse);
+    });
+
+    test('sample levels include placeholder visual asset ids', () {
+      final levels = sampleNinjaRunnerLevels();
+
+      expect(
+        levels.map((level) => level.contentPack.runner.portraitAssetId),
+        [
+          'character-jordan-placeholder',
+          'character-nari-placeholder',
+          'character-arjun-placeholder',
+        ],
+      );
+      expect(
+        levels.map((level) => level.contentPack.theme.backgroundAssetId),
+        [
+          'theme-brazil-arena-placeholder',
+          'theme-france-arena-placeholder',
+          'theme-portugal-arena-placeholder',
+        ],
+      );
     });
   });
 }

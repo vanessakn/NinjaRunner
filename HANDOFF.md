@@ -48,6 +48,8 @@ flutter build web --release --base-href=/ --no-wasm-dry-run
 - Persistent local unlock progress
 - Best score tracking per level
 - Polished CustomPainter gameplay scene
+- Character portrait asset slots with placeholder runner palettes
+- Theme background asset slots with placeholder arena accents
 - Android and iOS build targets
 - Android Impeller opt-in via `AndroidManifest.xml`
 - Flutter web export served through Sites
@@ -59,7 +61,7 @@ flutter build web --release --base-href=/ --no-wasm-dry-run
 - `lib/ninja_runner/rendering/runner_painter.dart`: gameplay visuals
 - `lib/ninja_runner/game/runner_controller.dart`: game state machine
 - `lib/ninja_runner/game/level_progress_store.dart`: local progress and best scores
-- `lib/ninja_runner/data/sample_content_pack.dart`: current level/content data
+- `lib/ninja_runner/data/sample_content_pack.dart`: current level/content and asset id data
 - `test/widget_test.dart`: end-to-end widget behavior
 - `test/ninja_runner/`: model, controller, analytics, and progress tests
 
@@ -81,7 +83,7 @@ because the Android SDK was missing and Xcode/CocoaPods were incomplete there.
 
 ## Next Suggested Work
 
-1. Add character portrait asset slots and placeholders for Jordan, Nari, and Arjun.
-2. Add theme background asset slots for Brazil Arena, France Arena, and Portugal Arena.
+1. Replace placeholder character/theme visuals with official KidNation assets when available.
+2. Add an asset-loading layer that maps `portraitAssetId` and `backgroundAssetId` to image files.
 3. Keep the KNSoccer boundary: no balls, goals, teams, matches, dribbling, passing, or shooting.
-4. Replace placeholder art with official KidNation assets when available.
+4. Add audio-ready prompt and feedback hooks once visual assets are stable.

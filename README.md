@@ -12,6 +12,10 @@ Level unlock progress is saved locally, so unlocked runs stay available after
 the app restarts. Best scores are saved per level and shown in the level select
 and round summary.
 
+Character portrait and theme background asset ids are included in the content
+pack model. The current build renders them as non-soccer placeholder visuals so
+official KidNation art can be swapped in later.
+
 ## Run
 
 ```bash

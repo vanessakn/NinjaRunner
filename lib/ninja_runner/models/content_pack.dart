@@ -47,6 +47,7 @@ class RunnerTheme {
     required this.name,
     required this.primaryColor,
     required this.secondaryColor,
+    this.backgroundAssetId,
   });
 
   factory RunnerTheme.fromJson(Map<String, Object?> json) {
@@ -55,6 +56,7 @@ class RunnerTheme {
       name: _string(json, 'name'),
       primaryColor: Color(_int(json, 'primaryColor')),
       secondaryColor: Color(_int(json, 'secondaryColor')),
+      backgroundAssetId: _optionalString(json, 'backgroundAssetId'),
     );
   }
 
@@ -62,23 +64,27 @@ class RunnerTheme {
   final String name;
   final Color primaryColor;
   final Color secondaryColor;
+  final String? backgroundAssetId;
 }
 
 class RunnerCharacter {
   const RunnerCharacter({
     required this.id,
     required this.name,
+    this.portraitAssetId,
   });
 
   factory RunnerCharacter.fromJson(Map<String, Object?> json) {
     return RunnerCharacter(
       id: _string(json, 'id'),
       name: _string(json, 'name'),
+      portraitAssetId: _optionalString(json, 'portraitAssetId'),
     );
   }
 
   final String id;
   final String name;
+  final String? portraitAssetId;
 }
 
 class RunnerPrompt {
@@ -93,7 +99,8 @@ class RunnerPrompt {
   factory RunnerPrompt.fromJson(Map<String, Object?> json) {
     final answers = _list(json, 'answers').map(RunnerAnswer.fromJson).toList();
     if (answers.length != 2) {
-      throw const FormatException('Runner prompts must include exactly two answers.');
+      throw const FormatException(
+          'Runner prompts must include exactly two answers.');
     }
 
     final correctAnswerId = _string(json, 'correctAnswerId');
@@ -140,6 +147,17 @@ class RunnerAnswer {
 
 String _string(Map<String, Object?> json, String key) {
   final value = json[key];
+  if (value is String && value.trim().isNotEmpty) {
+    return value;
+  }
+  throw FormatException('Expected non-empty string for "$key".');
+}
+
+String? _optionalString(Map<String, Object?> json, String key) {
+  final value = json[key];
+  if (value == null) {
+    return null;
+  }
   if (value is String && value.trim().isNotEmpty) {
     return value;
   }

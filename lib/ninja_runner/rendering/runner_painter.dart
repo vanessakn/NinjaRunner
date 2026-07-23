@@ -63,6 +63,78 @@ class RunnerPainter extends CustomPainter {
       Rect.fromLTWH(size.width * 0.42, hillTop - 18, size.width * 0.78, 118),
       nearHillPaint,
     );
+    _drawThemePlaceholder(canvas, size);
+  }
+
+  void _drawThemePlaceholder(Canvas canvas, Size size) {
+    final assetId = contentPack.theme.backgroundAssetId;
+    switch (assetId) {
+      case 'theme-brazil-arena-placeholder':
+        _drawBrazilTheme(canvas, size);
+      case 'theme-france-arena-placeholder':
+        _drawFranceTheme(canvas, size);
+      case 'theme-portugal-arena-placeholder':
+        _drawPortugalTheme(canvas, size);
+      default:
+        _drawNeutralTheme(canvas, size);
+    }
+  }
+
+  void _drawBrazilTheme(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = contentPack.theme.secondaryColor.withValues(alpha: 0.5)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 5;
+    for (var i = 0; i < 3; i++) {
+      canvas.drawArc(
+        Rect.fromCenter(
+          center: Offset(size.width * (0.16 + i * 0.14), size.height * 0.3),
+          width: 86,
+          height: 36,
+        ),
+        0,
+        math.pi,
+        false,
+        paint,
+      );
+    }
+  }
+
+  void _drawFranceTheme(Canvas canvas, Size size) {
+    final stripeWidth = size.width * 0.055;
+    final top = size.height * 0.16;
+    final height = size.height * 0.22;
+    final colors = [
+      const Color(0xFF2867D4).withValues(alpha: 0.42),
+      Colors.white.withValues(alpha: 0.62),
+      const Color(0xFFE34B5F).withValues(alpha: 0.42),
+    ];
+    for (var i = 0; i < colors.length; i++) {
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(32 + i * stripeWidth, top, stripeWidth, height),
+          const Radius.circular(10),
+        ),
+        Paint()..color = colors[i],
+      );
+    }
+  }
+
+  void _drawPortugalTheme(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = contentPack.theme.secondaryColor.withValues(alpha: 0.45);
+    for (var i = 0; i < 4; i++) {
+      final center = Offset(size.width * (0.18 + i * 0.16), size.height * 0.25);
+      _drawStar(canvas, center, 14 + i % 2 * 3, paint);
+    }
+  }
+
+  void _drawNeutralTheme(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.36)
+      ..strokeWidth = 4
+      ..style = PaintingStyle.stroke;
+    canvas.drawCircle(Offset(size.width * 0.18, size.height * 0.24), 28, paint);
   }
 
   void _drawLane(Canvas canvas, Size size) {
@@ -256,7 +328,8 @@ class RunnerPainter extends CustomPainter {
         ? math.sin(state.runnerProgress * math.pi * 12) * 4
         : 0.0;
     final runnerCenter = Offset(baseX, baseY + bounce);
-    final bodyPaint = Paint()..color = const Color(0xFFFFD166);
+    final palette = _characterPalette(contentPack.runner.portraitAssetId);
+    final bodyPaint = Paint()..color = palette.shirtColor;
     final outlinePaint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 4
@@ -279,7 +352,7 @@ class RunnerPainter extends CustomPainter {
     canvas.drawRRect(body, outlinePaint);
 
     final headCenter = Offset(baseX, runnerCenter.dy - 52);
-    canvas.drawCircle(headCenter, 25, Paint()..color = const Color(0xFFFFC49B));
+    canvas.drawCircle(headCenter, 25, Paint()..color = palette.skinColor);
     canvas.drawCircle(headCenter, 25, outlinePaint);
     canvas.drawArc(
       Rect.fromCenter(
@@ -291,7 +364,7 @@ class RunnerPainter extends CustomPainter {
         ..style = PaintingStyle.stroke
         ..strokeWidth = 8
         ..strokeCap = StrokeCap.round
-        ..color = const Color(0xFF402218),
+        ..color = palette.hairColor,
     );
     canvas.drawCircle(
       headCenter.translate(-8, 0),
@@ -407,6 +480,45 @@ class RunnerPainter extends CustomPainter {
     return start + (end - start) * t;
   }
 
+  void _drawStar(Canvas canvas, Offset center, double radius, Paint paint) {
+    final path = Path();
+    for (var i = 0; i < 10; i++) {
+      final angle = -math.pi / 2 + i * math.pi / 5;
+      final pointRadius = i.isEven ? radius : radius * 0.45;
+      final point = Offset(
+        center.dx + math.cos(angle) * pointRadius,
+        center.dy + math.sin(angle) * pointRadius,
+      );
+      if (i == 0) {
+        path.moveTo(point.dx, point.dy);
+      } else {
+        path.lineTo(point.dx, point.dy);
+      }
+    }
+    path.close();
+    canvas.drawPath(path, paint);
+  }
+
+  _CharacterPalette _characterPalette(String? portraitAssetId) {
+    return switch (portraitAssetId) {
+      'character-nari-placeholder' => const _CharacterPalette(
+          shirtColor: Color(0xFF80D8FF),
+          skinColor: Color(0xFFFFD0A6),
+          hairColor: Color(0xFF171717),
+        ),
+      'character-arjun-placeholder' => const _CharacterPalette(
+          shirtColor: Color(0xFFE53B44),
+          skinColor: Color(0xFFD99A6C),
+          hairColor: Color(0xFF2E1B12),
+        ),
+      _ => const _CharacterPalette(
+          shirtColor: Color(0xFFFFD166),
+          skinColor: Color(0xFFFFC49B),
+          hairColor: Color(0xFF402218),
+        ),
+    };
+  }
+
   void _drawText(
     Canvas canvas,
     String text,
@@ -444,4 +556,16 @@ class RunnerPainter extends CustomPainter {
         oldDelegate.currentPrompt != currentPrompt ||
         oldDelegate.contentPack != contentPack;
   }
+}
+
+class _CharacterPalette {
+  const _CharacterPalette({
+    required this.shirtColor,
+    required this.skinColor,
+    required this.hairColor,
+  });
+
+  final Color shirtColor;
+  final Color skinColor;
+  final Color hairColor;
 }
