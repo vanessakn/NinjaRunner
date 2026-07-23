@@ -186,6 +186,7 @@ void main() {
     await tester.pump();
 
     expect(find.text('Streak Boost!'), findsOneWidget);
+    expect(find.text('+1 star'), findsOneWidget);
     expect(find.text('Streak 1'), findsOneWidget);
     expect(find.text('Keep Running'), findsOneWidget);
   });
@@ -204,6 +205,7 @@ void main() {
     await tester.pump();
 
     expect(find.text('Slow down and try again'), findsOneWidget);
+    expect(find.text('Correct gate: share'), findsOneWidget);
     expect(find.text('Streak 0'), findsOneWidget);
   });
 }

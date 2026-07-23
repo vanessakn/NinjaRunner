@@ -439,6 +439,14 @@ class _Controls extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
+                _feedbackDetail(controller),
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+              ),
+              const SizedBox(height: 4),
+              Text(
                 'Streak ${state.streak}',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.labelMedium,
@@ -497,6 +505,17 @@ class _Controls extends StatelessWidget {
         RunnerPhase.error => const Text('The run needs a quick reset.'),
       },
     );
+  }
+
+  String _feedbackDetail(RunnerController controller) {
+    final result = controller.state.lastResult;
+    if (result == null) {
+      return '';
+    }
+    if (result.isCorrect) {
+      return '+1 star';
+    }
+    return 'Correct gate: ${controller.currentPrompt.correctAnswer.label}';
   }
 }
 
