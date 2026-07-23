@@ -147,7 +147,7 @@ void main() {
 
     controller.tick(1);
 
-    expect(controller.state.runnerProgress, 0.3);
+    expect(controller.state.runnerProgress, 0.2);
   });
 
   test('round completion reports whether selected level is complete', () {

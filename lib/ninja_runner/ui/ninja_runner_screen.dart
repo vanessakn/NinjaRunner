@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:flutter/services.dart';
 
 import '../analytics/analytics_logger.dart';
 import '../data/sample_content_pack.dart';
@@ -12,9 +13,11 @@ class NinjaRunnerScreen extends StatefulWidget {
   const NinjaRunnerScreen({
     super.key,
     this.progressStore,
+    this.feedbackEffects,
   });
 
   final LevelProgressStore? progressStore;
+  final RunnerFeedbackEffects? feedbackEffects;
 
   @override
   State<NinjaRunnerScreen> createState() => _NinjaRunnerScreenState();
@@ -26,6 +29,7 @@ class _NinjaRunnerScreenState extends State<NinjaRunnerScreen>
   late RunnerController _controller;
   late final Ticker _ticker;
   late final LevelProgressStore _progressStore;
+  late final RunnerFeedbackEffects _feedbackEffects;
   var _selectedLevelIndex = 0;
   var _highestUnlockedLevelIndex = 0;
   var _bestScoresByLevelId = <String, int>{};
@@ -37,6 +41,8 @@ class _NinjaRunnerScreenState extends State<NinjaRunnerScreen>
     _levels = sampleNinjaRunnerLevels();
     _progressStore =
         widget.progressStore ?? SharedPreferencesLevelProgressStore();
+    _feedbackEffects =
+        widget.feedbackEffects ?? PlatformRunnerFeedbackEffects();
     _controller = _createController(_levels[_selectedLevelIndex]);
     _ticker = createTicker(_handleTick);
     _restoreProgress();
@@ -129,6 +135,7 @@ class _NinjaRunnerScreenState extends State<NinjaRunnerScreen>
 
   void _startRound() {
     setState(_controller.startRound);
+    _feedbackEffects.playRoundStart();
     _startTicker();
   }
 
@@ -150,6 +157,9 @@ class _NinjaRunnerScreenState extends State<NinjaRunnerScreen>
     setState(_controller.continueAfterFeedback);
     if (wasRunning && _controller.state.phase == RunnerPhase.summary) {
       _saveBestScoreForCurrentLevel();
+      if (_controller.isLevelComplete) {
+        _feedbackEffects.playLevelComplete();
+      }
     }
     if (_controller.state.phase == RunnerPhase.running) {
       _startTicker();
@@ -176,7 +186,12 @@ class _NinjaRunnerScreenState extends State<NinjaRunnerScreen>
     }
 
     setState(() {
-      _controller.selectAnswer(answers[index].id);
+      final result = _controller.selectAnswer(answers[index].id);
+      if (result.isCorrect) {
+        _feedbackEffects.playCorrectAnswer();
+      } else {
+        _feedbackEffects.playWrongAnswer();
+      }
     });
     if (_controller.state.phase != RunnerPhase.running) {
       _stopTicker();
@@ -247,6 +262,42 @@ class _NinjaRunnerScreenState extends State<NinjaRunnerScreen>
       level: level,
       analyticsLogger: AnalyticsLogger(),
     );
+  }
+}
+
+abstract class RunnerFeedbackEffects {
+  void playRoundStart();
+
+  void playCorrectAnswer();
+
+  void playWrongAnswer();
+
+  void playLevelComplete();
+}
+
+class PlatformRunnerFeedbackEffects implements RunnerFeedbackEffects {
+  @override
+  void playRoundStart() {
+    HapticFeedback.selectionClick();
+    SystemSound.play(SystemSoundType.click);
+  }
+
+  @override
+  void playCorrectAnswer() {
+    HapticFeedback.lightImpact();
+    SystemSound.play(SystemSoundType.click);
+  }
+
+  @override
+  void playWrongAnswer() {
+    HapticFeedback.mediumImpact();
+    SystemSound.play(SystemSoundType.alert);
+  }
+
+  @override
+  void playLevelComplete() {
+    HapticFeedback.heavyImpact();
+    SystemSound.play(SystemSoundType.click);
   }
 }
 

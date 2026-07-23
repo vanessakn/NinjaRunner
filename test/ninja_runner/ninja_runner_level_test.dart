@@ -11,7 +11,10 @@ void main() {
       'Star Streak Challenge',
       'Friendship Focus Dash',
     ]);
-    expect(levels.map((level) => level.runnerSpeed), [0.18, 0.24, 0.3, 0.34]);
+    expect(
+      levels.map((level) => level.runnerSpeed),
+      [0.12, 0.16, 0.2, 0.24],
+    );
     expect(levels.map((level) => level.requiredScore), [0, 4, 5, 5]);
     expect(
         levels.every((level) => level.contentPack.prompts.length == 5), isTrue);

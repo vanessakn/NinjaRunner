@@ -11,9 +11,11 @@ class KidNationMobileGamesApp extends StatelessWidget {
   const KidNationMobileGamesApp({
     super.key,
     this.progressStore,
+    this.feedbackEffects,
   });
 
   final LevelProgressStore? progressStore;
+  final RunnerFeedbackEffects? feedbackEffects;
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +35,10 @@ class KidNationMobileGamesApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-      home: NinjaRunnerScreen(progressStore: progressStore),
+      home: NinjaRunnerScreen(
+        progressStore: progressStore,
+        feedbackEffects: feedbackEffects,
+      ),
     );
   }
 }

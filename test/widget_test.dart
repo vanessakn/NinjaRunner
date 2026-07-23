@@ -34,7 +34,8 @@ void main() {
   });
 
   testWidgets('completing first level unlocks next level', (tester) async {
-    await pumpNinjaRunner(tester);
+    final feedbackEffects = RecordingRunnerFeedbackEffects();
+    await pumpNinjaRunner(tester, feedbackEffects: feedbackEffects);
 
     await tester.tap(find.text('Start Run'));
     await tester.pump();
@@ -52,6 +53,18 @@ void main() {
     expect(find.text('Level Complete!'), findsOneWidget);
     expect(find.text('Perfect run!'), findsOneWidget);
     expect(find.text('Next Level'), findsOneWidget);
+    expect(
+      feedbackEffects.events,
+      [
+        'start',
+        'correct',
+        'correct',
+        'correct',
+        'correct',
+        'correct',
+        'complete'
+      ],
+    );
 
     await tester.tap(find.text('Next Level'));
     await tester.pump();
@@ -178,13 +191,15 @@ void main() {
 
   testWidgets('correct gate choice shows streak boost feedback',
       (tester) async {
-    await pumpNinjaRunner(tester);
+    final feedbackEffects = RecordingRunnerFeedbackEffects();
+    await pumpNinjaRunner(tester, feedbackEffects: feedbackEffects);
 
     await tester.tap(find.text('Start Run'));
     await tester.pump();
     await tester.tap(find.text('share'));
     await tester.pump();
 
+    expect(feedbackEffects.events, ['start', 'correct']);
     expect(find.text('Streak Boost!'), findsOneWidget);
     expect(find.text('+1 star'), findsOneWidget);
     expect(find.text('Streak 1'), findsOneWidget);
@@ -193,7 +208,8 @@ void main() {
 
   testWidgets('right half of vertical lane chooses the right gate',
       (tester) async {
-    await pumpNinjaRunner(tester);
+    final feedbackEffects = RecordingRunnerFeedbackEffects();
+    await pumpNinjaRunner(tester, feedbackEffects: feedbackEffects);
 
     await tester.tap(find.text('Start Run'));
     await tester.pump();
@@ -204,6 +220,7 @@ void main() {
     await tester.tapAt(topLeft + Offset(size.width * 0.6, size.height * 0.52));
     await tester.pump();
 
+    expect(feedbackEffects.events, ['start', 'wrong']);
     expect(find.text('Slow down and try again'), findsOneWidget);
     expect(find.text('Correct gate: share'), findsOneWidget);
     expect(find.text('Streak 0'), findsOneWidget);
@@ -213,11 +230,37 @@ void main() {
 Future<void> pumpNinjaRunner(
   WidgetTester tester, {
   MemoryLevelProgressStore? progressStore,
+  RunnerFeedbackEffects? feedbackEffects,
 }) async {
   await tester.pumpWidget(
     KidNationMobileGamesApp(
       progressStore: progressStore ?? MemoryLevelProgressStore(),
+      feedbackEffects: feedbackEffects,
     ),
   );
   await tester.pump();
+}
+
+class RecordingRunnerFeedbackEffects implements RunnerFeedbackEffects {
+  final events = <String>[];
+
+  @override
+  void playCorrectAnswer() {
+    events.add('correct');
+  }
+
+  @override
+  void playLevelComplete() {
+    events.add('complete');
+  }
+
+  @override
+  void playRoundStart() {
+    events.add('start');
+  }
+
+  @override
+  void playWrongAnswer() {
+    events.add('wrong');
+  }
 }
