@@ -26,6 +26,13 @@ assets/characters/bjorn.png
 Recommended character art: transparent PNG, portrait/full-body runner, centered
 in the image.
 
+The current character files are first-pass prototype crops from the supplied
+character sheets. They are suitable for visual playtesting, but should be
+replaced with clean production exports when final KidNation art is available.
+Jordan's supplied sheet does not include a perfectly clean full-body front pose
+without overlapping reference art, so that crop should be prioritized for a
+future cleanup pass.
+
 ## Background Files
 
 These files are optional. If a file is missing, the game uses the painted arena
