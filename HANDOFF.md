@@ -61,11 +61,13 @@ flutter build web --release --base-href=/ --no-wasm-dry-run
 - `lib/main.dart`: app entrypoint
 - `lib/ninja_runner/ui/ninja_runner_screen.dart`: screen, controls, level select
 - `lib/ninja_runner/rendering/runner_painter.dart`: gameplay visuals
+- `lib/ninja_runner/rendering/runner_asset_resolver.dart`: asset id to file path mapping
 - `lib/ninja_runner/game/runner_controller.dart`: game state machine
 - `lib/ninja_runner/game/level_progress_store.dart`: local progress and best scores
 - `lib/ninja_runner/data/sample_content_pack.dart`: current level/content and asset id data
 - `test/widget_test.dart`: end-to-end widget behavior
 - `test/ninja_runner/`: model, controller, analytics, and progress tests
+- `docs/assets.md`: expected character/background asset filenames
 
 ## Build Notes
 
@@ -94,5 +96,4 @@ reported no iOS/Android device or emulator.
 1. Run the real device QA checklist in `docs/mobile-qa-handoff.md`.
 2. Tune touch zones, pacing, and haptic/sound intensity from real iOS/Android notes.
 3. Replace placeholder character/theme visuals with official KidNation assets when available.
-4. Add an asset-loading layer that maps `portraitAssetId` and `backgroundAssetId` to image files.
-5. Keep the KNSoccer boundary: no balls, goals, teams, matches, dribbling, passing, or shooting.
+4. Keep the KNSoccer boundary: no balls, goals, teams, matches, dribbling, passing, or shooting.

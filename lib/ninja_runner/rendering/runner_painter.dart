@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
@@ -10,11 +11,15 @@ class RunnerPainter extends CustomPainter {
     required this.contentPack,
     required this.state,
     required this.currentPrompt,
+    this.runnerImage,
+    this.backgroundImage,
   });
 
   final ContentPack contentPack;
   final RunnerGameState state;
   final RunnerPrompt currentPrompt;
+  final ui.Image? runnerImage;
+  final ui.Image? backgroundImage;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -65,7 +70,30 @@ class RunnerPainter extends CustomPainter {
       Rect.fromLTWH(size.width * 0.42, hillTop - 18, size.width * 0.78, 118),
       nearHillPaint,
     );
-    _drawThemePlaceholder(canvas, size);
+    if (backgroundImage case final image?) {
+      _drawBackgroundImage(canvas, size, image);
+    } else {
+      _drawThemePlaceholder(canvas, size);
+    }
+  }
+
+  void _drawBackgroundImage(Canvas canvas, Size size, ui.Image image) {
+    final imageSize = Size(image.width.toDouble(), image.height.toDouble());
+    final target = Rect.fromLTWH(0, 0, size.width, size.height * 0.58);
+    final fitted = applyBoxFit(BoxFit.cover, imageSize, target.size);
+    final source =
+        Alignment.center.inscribe(fitted.source, Offset.zero & imageSize);
+    final destination = Alignment.center.inscribe(fitted.destination, target);
+    canvas.drawImageRect(
+      image,
+      source,
+      destination,
+      Paint()..filterQuality = FilterQuality.medium,
+    );
+    canvas.drawRect(
+      target,
+      Paint()..color = Colors.white.withValues(alpha: 0.18),
+    );
   }
 
   void _drawThemePlaceholder(Canvas canvas, Size size) {
@@ -480,6 +508,10 @@ class RunnerPainter extends CustomPainter {
         : 0.0;
     final runnerCenter = Offset(baseX, baseY + bounce);
     final palette = _characterPalette(contentPack.runner.portraitAssetId);
+    if (runnerImage case final image?) {
+      _drawRunnerImage(canvas, runnerCenter, baseY, scale, image);
+      return;
+    }
     final bodyPaint = Paint()..color = palette.shirtColor;
     final outlinePaint = Paint()
       ..style = PaintingStyle.stroke
@@ -596,6 +628,39 @@ class RunnerPainter extends CustomPainter {
       fontSize: 13 * scale,
       fontWeight: FontWeight.w900,
       textAlign: TextAlign.center,
+    );
+  }
+
+  void _drawRunnerImage(
+    Canvas canvas,
+    Offset runnerCenter,
+    double baseY,
+    double scale,
+    ui.Image image,
+  ) {
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: Offset(runnerCenter.dx, baseY + 54 * scale),
+        width: 76 * scale,
+        height: 18 * scale,
+      ),
+      Paint()..color = const Color(0xFF151515).withValues(alpha: 0.18),
+    );
+    final imageSize = Size(image.width.toDouble(), image.height.toDouble());
+    final target = Rect.fromCenter(
+      center: runnerCenter.translate(0, -10 * scale),
+      width: 92 * scale,
+      height: 132 * scale,
+    );
+    final fitted = applyBoxFit(BoxFit.contain, imageSize, target.size);
+    final source =
+        Alignment.center.inscribe(fitted.source, Offset.zero & imageSize);
+    final destination = Alignment.center.inscribe(fitted.destination, target);
+    canvas.drawImageRect(
+      image,
+      source,
+      destination,
+      Paint()..filterQuality = FilterQuality.medium,
     );
   }
 
@@ -745,7 +810,9 @@ class RunnerPainter extends CustomPainter {
   bool shouldRepaint(covariant RunnerPainter oldDelegate) {
     return oldDelegate.state != state ||
         oldDelegate.currentPrompt != currentPrompt ||
-        oldDelegate.contentPack != contentPack;
+        oldDelegate.contentPack != contentPack ||
+        oldDelegate.runnerImage != runnerImage ||
+        oldDelegate.backgroundImage != backgroundImage;
   }
 }
 

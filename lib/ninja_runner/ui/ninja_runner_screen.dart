@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
+import 'dart:ui' as ui;
 
 import '../analytics/analytics_logger.dart';
 import '../data/sample_content_pack.dart';
 import '../game/level_progress_store.dart';
 import '../game/runner_controller.dart';
 import '../models/ninja_runner_level.dart';
+import '../rendering/runner_asset_resolver.dart';
 import '../rendering/runner_painter.dart';
 
 class NinjaRunnerScreen extends StatefulWidget {
@@ -30,6 +32,7 @@ class _NinjaRunnerScreenState extends State<NinjaRunnerScreen>
   late final Ticker _ticker;
   late final LevelProgressStore _progressStore;
   late final RunnerFeedbackEffects _feedbackEffects;
+  _LoadedRunnerAssets _loadedAssets = const _LoadedRunnerAssets();
   var _selectedLevelIndex = 0;
   var _highestUnlockedLevelIndex = 0;
   var _bestScoresByLevelId = <String, int>{};
@@ -46,6 +49,7 @@ class _NinjaRunnerScreenState extends State<NinjaRunnerScreen>
     _controller = _createController(_levels[_selectedLevelIndex]);
     _ticker = createTicker(_handleTick);
     _restoreProgress();
+    _loadVisualAssetsForCurrentLevel();
   }
 
   @override
@@ -108,6 +112,8 @@ class _NinjaRunnerScreenState extends State<NinjaRunnerScreen>
                         contentPack: _controller.contentPack,
                         state: state,
                         currentPrompt: _controller.currentPrompt,
+                        runnerImage: _loadedAssets.runnerImage,
+                        backgroundImage: _loadedAssets.backgroundImage,
                       ),
                       child: const SizedBox.expand(),
                     ),
@@ -149,7 +155,9 @@ class _NinjaRunnerScreenState extends State<NinjaRunnerScreen>
     setState(() {
       _selectedLevelIndex = index;
       _controller = _createController(_levels[index]);
+      _loadedAssets = const _LoadedRunnerAssets();
     });
+    _loadVisualAssetsForCurrentLevel();
   }
 
   void _continueAfterFeedback() {
@@ -223,8 +231,10 @@ class _NinjaRunnerScreenState extends State<NinjaRunnerScreen>
           : _highestUnlockedLevelIndex;
       _selectedLevelIndex = nextIndex;
       _controller = _createController(_levels[nextIndex]);
+      _loadedAssets = const _LoadedRunnerAssets();
       _controller.startRound();
     });
+    _loadVisualAssetsForCurrentLevel();
     _progressStore.saveHighestUnlockedLevelIndex(_highestUnlockedLevelIndex);
     _startTicker();
   }
@@ -263,6 +273,51 @@ class _NinjaRunnerScreenState extends State<NinjaRunnerScreen>
       analyticsLogger: AnalyticsLogger(),
     );
   }
+
+  Future<void> _loadVisualAssetsForCurrentLevel() async {
+    final level = _controller.level;
+    final runnerPath = RunnerAssetResolver.characterPath(
+      level.contentPack.runner.portraitAssetId,
+    );
+    final backgroundPath = RunnerAssetResolver.backgroundPath(
+      level.contentPack.theme.backgroundAssetId,
+    );
+    final runnerImage = await _loadOptionalImage(runnerPath);
+    final backgroundImage = await _loadOptionalImage(backgroundPath);
+    if (!mounted || level.id != _controller.level.id) {
+      return;
+    }
+    setState(() {
+      _loadedAssets = _LoadedRunnerAssets(
+        runnerImage: runnerImage,
+        backgroundImage: backgroundImage,
+      );
+    });
+  }
+
+  Future<ui.Image?> _loadOptionalImage(String? assetPath) async {
+    if (assetPath == null) {
+      return null;
+    }
+    try {
+      final data = await rootBundle.load(assetPath);
+      final codec = await ui.instantiateImageCodec(data.buffer.asUint8List());
+      final frame = await codec.getNextFrame();
+      return frame.image;
+    } on FlutterError {
+      return null;
+    }
+  }
+}
+
+class _LoadedRunnerAssets {
+  const _LoadedRunnerAssets({
+    this.runnerImage,
+    this.backgroundImage,
+  });
+
+  final ui.Image? runnerImage;
+  final ui.Image? backgroundImage;
 }
 
 abstract class RunnerFeedbackEffects {
