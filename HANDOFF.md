@@ -43,11 +43,13 @@ flutter build web --release --base-href=/ --no-wasm-dry-run
 ## Current Features
 
 - Single-runner answer-gate gameplay for ages 5-8
-- Three levels with increasing speed
+- Four levels with kid-friendly pacing
 - Locked/unlocked level progression
 - Persistent local unlock progress
 - Best score tracking per level
-- Polished CustomPainter gameplay scene
+- Vertical runner CustomPainter gameplay scene
+- Runner-style star pickups, answer gates, boost feedback, and mobile HUD
+- Lightweight haptic/system-sound hooks for start, correct, wrong, and complete states
 - Character portrait asset slots with placeholder runner palettes
 - Theme background asset slots with placeholder arena accents
 - Android and iOS build targets
@@ -78,12 +80,19 @@ has an explicit Impeller opt-in:
 
 iOS uses Impeller as its only supported Flutter renderer.
 
-Native Android/iOS builds were not fully verified on the original machine
-because the Android SDK was missing and Xcode/CocoaPods were incomplete there.
+Native Android/iOS builds still need real device QA. The latest Codex machine
+only had macOS and Chrome available:
+
+```bash
+flutter devices
+```
+
+reported no iOS/Android device or emulator.
 
 ## Next Suggested Work
 
-1. Replace placeholder character/theme visuals with official KidNation assets when available.
-2. Add an asset-loading layer that maps `portraitAssetId` and `backgroundAssetId` to image files.
-3. Keep the KNSoccer boundary: no balls, goals, teams, matches, dribbling, passing, or shooting.
-4. Add audio-ready prompt and feedback hooks once visual assets are stable.
+1. Run the real device QA checklist in `docs/mobile-qa-handoff.md`.
+2. Tune touch zones, pacing, and haptic/sound intensity from real iOS/Android notes.
+3. Replace placeholder character/theme visuals with official KidNation assets when available.
+4. Add an asset-loading layer that maps `portraitAssetId` and `backgroundAssetId` to image files.
+5. Keep the KNSoccer boundary: no balls, goals, teams, matches, dribbling, passing, or shooting.
