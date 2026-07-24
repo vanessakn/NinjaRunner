@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:flutter/services.dart';
 
 import '../game/ninja_go_controller.dart';
 import '../models/ninja_go_models.dart';
@@ -16,18 +17,22 @@ class _NinjaGoScreenState extends State<NinjaGoScreen>
     with SingleTickerProviderStateMixin {
   late final NinjaGoController _controller;
   late final Ticker _ticker;
+  late final FocusNode _focusNode;
   Duration? _lastTick;
+  Offset _dragOffset = Offset.zero;
 
   @override
   void initState() {
     super.initState();
     _controller = NinjaGoController();
     _ticker = createTicker(_handleTick);
+    _focusNode = FocusNode(debugLabel: 'NinjaGoControls');
   }
 
   @override
   void dispose() {
     _ticker.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
@@ -56,46 +61,57 @@ class _NinjaGoScreenState extends State<NinjaGoScreen>
   @override
   Widget build(BuildContext context) {
     final state = _controller.state;
-    return Scaffold(
-      backgroundColor: const Color(0xFFE8FAFF),
-      body: SafeArea(
-        child: Column(
-          children: [
-            _TopBar(state: state),
-            Expanded(
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onHorizontalDragEnd: _handleHorizontalDragEnd,
-                onVerticalDragEnd: _handleVerticalDragEnd,
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    CustomPaint(
-                      painter: NinjaGoPainter(state: state),
-                      child: const SizedBox.expand(),
-                    ),
-                    if (state.phase == NinjaGoPhase.ready)
-                      _ReadyOverlay(onStart: _startRun),
-                    if (state.phase == NinjaGoPhase.gameOver)
-                      _GameOverOverlay(state: state, onPlayAgain: _startRun),
-                  ],
+    return KeyboardListener(
+      focusNode: _focusNode,
+      autofocus: true,
+      onKeyEvent: _handleKeyEvent,
+      child: Scaffold(
+        backgroundColor: const Color(0xFFE8FAFF),
+        body: SafeArea(
+          child: Column(
+            children: [
+              _TopBar(state: state),
+              Expanded(
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTapDown: (_) => _focusNode.requestFocus(),
+                  onPanStart: (_) => _dragOffset = Offset.zero,
+                  onPanUpdate: _handlePanUpdate,
+                  onPanEnd: (_) => _dragOffset = Offset.zero,
+                  onPanCancel: () => _dragOffset = Offset.zero,
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      CustomPaint(
+                        painter: NinjaGoPainter(state: state),
+                        child: const SizedBox.expand(),
+                      ),
+                      _SwipeHint(
+                          isRunning: state.phase == NinjaGoPhase.running),
+                      _ActionButtons(
+                        isRunning: state.phase == NinjaGoPhase.running,
+                        onLeft: _moveLeft,
+                        onJump: _jump,
+                        onSlide: _slide,
+                        onRight: _moveRight,
+                      ),
+                      if (state.phase == NinjaGoPhase.ready)
+                        _ReadyOverlay(onStart: _startRun),
+                      if (state.phase == NinjaGoPhase.gameOver)
+                        _GameOverOverlay(state: state, onPlayAgain: _startRun),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            _ActionButtons(
-              isRunning: state.phase == NinjaGoPhase.running,
-              onLeft: _moveLeft,
-              onJump: _jump,
-              onSlide: _slide,
-              onRight: _moveRight,
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
   void _startRun() {
+    _focusNode.requestFocus();
     setState(_controller.startRun);
     _startTicker();
   }
@@ -116,21 +132,47 @@ class _NinjaGoScreenState extends State<NinjaGoScreen>
     setState(_controller.slide);
   }
 
-  void _handleHorizontalDragEnd(DragEndDetails details) {
-    final velocity = details.primaryVelocity ?? 0;
-    if (velocity < 0) {
-      _moveRight();
-    } else if (velocity > 0) {
-      _moveLeft();
+  void _handlePanUpdate(DragUpdateDetails details) {
+    if (_controller.state.phase != NinjaGoPhase.running) {
+      return;
     }
+
+    _dragOffset += details.delta;
+    const threshold = 26.0;
+    final horizontal = _dragOffset.dx.abs();
+    final vertical = _dragOffset.dy.abs();
+
+    if (horizontal < threshold && vertical < threshold) {
+      return;
+    }
+
+    if (horizontal > vertical) {
+      _dragOffset.dx > 0 ? _moveRight() : _moveLeft();
+    } else {
+      _dragOffset.dy > 0 ? _slide() : _jump();
+    }
+    _dragOffset = Offset.zero;
   }
 
-  void _handleVerticalDragEnd(DragEndDetails details) {
-    final velocity = details.primaryVelocity ?? 0;
-    if (velocity < 0) {
-      _jump();
-    } else if (velocity > 0) {
-      _slide();
+  void _handleKeyEvent(KeyEvent event) {
+    if (event is! KeyDownEvent) {
+      return;
+    }
+
+    switch (event.logicalKey) {
+      case LogicalKeyboardKey.arrowLeft:
+      case LogicalKeyboardKey.keyA:
+        _moveLeft();
+      case LogicalKeyboardKey.arrowRight:
+      case LogicalKeyboardKey.keyD:
+        _moveRight();
+      case LogicalKeyboardKey.arrowUp:
+      case LogicalKeyboardKey.keyW:
+      case LogicalKeyboardKey.space:
+        _jump();
+      case LogicalKeyboardKey.arrowDown:
+      case LogicalKeyboardKey.keyS:
+        _slide();
     }
   }
 
@@ -171,25 +213,89 @@ class _TopBar extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Score',
-                style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      fontWeight: FontWeight.w900,
-                    ),
-              ),
-              Text(
-                '${state.score}',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w900,
-                    ),
-              ),
-            ],
-          ),
+          _HudChip(label: 'Score', value: '${state.score}'),
+          const SizedBox(width: 8),
+          _HudChip(label: 'Stars', value: '${state.stars}'),
+          const SizedBox(width: 8),
+          _HudChip(label: 'Meters', value: '${state.distance.floor()}'),
         ],
+      ),
+    );
+  }
+}
+
+class _HudChip extends StatelessWidget {
+  const _HudChip({
+    required this.label,
+    required this.value,
+  });
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.82),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.black.withValues(alpha: 0.08)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    height: 1,
+                  ),
+            ),
+            Text(
+              value,
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    fontWeight: FontWeight.w900,
+                    height: 1.1,
+                  ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SwipeHint extends StatelessWidget {
+  const _SwipeHint({required this.isRunning});
+
+  final bool isRunning;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!isRunning) {
+      return const SizedBox.shrink();
+    }
+
+    return Positioned(
+      left: 16,
+      top: 14,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: Colors.black.withValues(alpha: 0.2),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          child: Text(
+            'Swipe anywhere',
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w900,
+                ),
+          ),
+        ),
       ),
     );
   }
@@ -235,7 +341,7 @@ class _ReadyOverlay extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Dodge the obstacles, grab stars, and keep moving.',
+                    'Swipe anywhere. Dodge obstacles, grab stars, and keep moving.',
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           fontWeight: FontWeight.w700,
@@ -378,34 +484,57 @@ class _ActionButtons extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 10, 12, 16),
-      child: Row(
-        children: [
-          _ControlButton(
-            label: 'Left',
-            icon: Icons.arrow_back_rounded,
-            onPressed: isRunning ? onLeft : null,
+    return Positioned(
+      left: 14,
+      right: 14,
+      bottom: 14,
+      child: IgnorePointer(
+        ignoring: !isRunning,
+        child: AnimatedOpacity(
+          duration: const Duration(milliseconds: 160),
+          opacity: isRunning ? 1 : 0,
+          child: Row(
+            children: [
+              Expanded(
+                flex: 5,
+                child: Row(
+                  children: [
+                    _ControlButton(
+                      label: 'Left',
+                      icon: Icons.arrow_back_rounded,
+                      onPressed: isRunning ? onLeft : null,
+                    ),
+                    const SizedBox(width: 10),
+                    _ControlButton(
+                      label: 'Right',
+                      icon: Icons.arrow_forward_rounded,
+                      onPressed: isRunning ? onRight : null,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                flex: 5,
+                child: Row(
+                  children: [
+                    _ControlButton(
+                      label: 'Jump',
+                      icon: Icons.keyboard_arrow_up_rounded,
+                      onPressed: isRunning ? onJump : null,
+                    ),
+                    const SizedBox(width: 10),
+                    _ControlButton(
+                      label: 'Slide',
+                      icon: Icons.keyboard_arrow_down_rounded,
+                      onPressed: isRunning ? onSlide : null,
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 8),
-          _ControlButton(
-            label: 'Jump',
-            icon: Icons.keyboard_arrow_up_rounded,
-            onPressed: isRunning ? onJump : null,
-          ),
-          const SizedBox(width: 8),
-          _ControlButton(
-            label: 'Slide',
-            icon: Icons.keyboard_arrow_down_rounded,
-            onPressed: isRunning ? onSlide : null,
-          ),
-          const SizedBox(width: 8),
-          _ControlButton(
-            label: 'Right',
-            icon: Icons.arrow_forward_rounded,
-            onPressed: isRunning ? onRight : null,
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -426,10 +555,19 @@ class _ControlButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Expanded(
       child: SizedBox(
-        height: 54,
+        height: 48,
         child: FilledButton.icon(
+          style: FilledButton.styleFrom(
+            backgroundColor: const Color(0xFF176D88),
+            disabledBackgroundColor: const Color(0xFF176D88),
+            foregroundColor: Colors.white,
+            disabledForegroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
           onPressed: onPressed,
-          icon: Icon(icon, size: 20),
+          icon: Icon(icon, size: 22),
           label: FittedBox(
             fit: BoxFit.scaleDown,
             child: Text(label),

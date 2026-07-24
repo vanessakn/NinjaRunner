@@ -28,7 +28,6 @@ class NinjaGoPainter extends CustomPainter {
     _drawScenery(canvas, size);
     _drawEntities(canvas, size);
     _drawRunner(canvas, size);
-    _drawHud(canvas, size);
 
     if (state.phase == NinjaGoPhase.gameOver) {
       _drawGameOverOverlay(canvas, size);
@@ -36,7 +35,7 @@ class NinjaGoPainter extends CustomPainter {
   }
 
   void _drawSky(Canvas canvas, Size size) {
-    final skyRect = Rect.fromLTWH(0, 0, size.width, size.height * 0.64);
+    final skyRect = Rect.fromLTWH(0, 0, size.width, size.height * 0.58);
     canvas.drawRect(
       skyRect,
       Paint()
@@ -47,8 +46,8 @@ class NinjaGoPainter extends CustomPainter {
         ).createShader(skyRect),
     );
 
-    final sunCenter = Offset(size.width * 0.82, size.height * 0.14);
-    final sunRadius = math.min(size.width, size.height) * 0.085;
+    final sunCenter = Offset(size.width * 0.83, size.height * 0.12);
+    final sunRadius = math.min(size.width, size.height) * 0.075;
     canvas.drawCircle(
       sunCenter,
       sunRadius * 1.45,
@@ -57,14 +56,14 @@ class NinjaGoPainter extends CustomPainter {
     canvas.drawCircle(sunCenter, sunRadius, Paint()..color = _kidYellow);
 
     final cloudPaint = Paint()..color = Colors.white.withValues(alpha: 0.82);
-    _drawCloud(canvas, Offset(size.width * 0.18, size.height * 0.17),
-        size.width * 0.08, cloudPaint);
-    _drawCloud(canvas, Offset(size.width * 0.58, size.height * 0.1),
-        size.width * 0.055, cloudPaint);
+    _drawCloud(canvas, Offset(size.width * 0.17, size.height * 0.14),
+        size.width * 0.068, cloudPaint);
+    _drawCloud(canvas, Offset(size.width * 0.58, size.height * 0.11),
+        size.width * 0.046, cloudPaint);
 
     for (var index = 0; index < 7; index += 1) {
       final x = (0.1 + index * 0.13) * size.width;
-      final y = (0.27 + (index.isEven ? 0.04 : 0.0)) * size.height;
+      final y = (0.24 + (index.isEven ? 0.035 : 0.0)) * size.height;
       _drawSpark(canvas, Offset(x, y), 5 + index % 3, _kidYellow);
     }
   }
@@ -90,10 +89,10 @@ class NinjaGoPainter extends CustomPainter {
   }
 
   void _drawTrack(Canvas canvas, Size size) {
-    final topY = size.height * 0.36;
-    final bottomY = size.height;
-    final topHalf = size.width * 0.12;
-    final bottomHalf = size.width * 0.54;
+    final topY = size.height * 0.31;
+    final bottomY = size.height * 0.94;
+    final topHalf = size.width * 0.075;
+    final bottomHalf = size.width * 0.41;
     final centerX = size.width / 2;
     final track = Path()
       ..moveTo(centerX - topHalf, topY)
@@ -106,6 +105,7 @@ class NinjaGoPainter extends CustomPainter {
       Rect.fromLTWH(0, topY - 12, size.width, bottomY - topY + 12),
       Paint()..color = _kidGreen,
     );
+    _drawLaneGuide(canvas, size);
     canvas.drawPath(
       track,
       Paint()
@@ -144,8 +144,8 @@ class NinjaGoPainter extends CustomPainter {
       );
     }
 
-    for (var index = 0; index < 6; index += 1) {
-      final position = 0.17 + index * 0.14;
+    for (var index = 0; index < 7; index += 1) {
+      final position = 0.12 + index * 0.13;
       final y = _yForPosition(size, position);
       final scale = _scaleForPosition(position);
       final halfWidth = _trackHalfWidth(size, position);
@@ -159,16 +159,47 @@ class NinjaGoPainter extends CustomPainter {
     }
   }
 
+  void _drawLaneGuide(Canvas canvas, Size size) {
+    if (state.phase != NinjaGoPhase.running) {
+      return;
+    }
+
+    const laneCenters = {
+      NinjaGoLane.left: 1 / 6,
+      NinjaGoLane.center: 3 / 6,
+      NinjaGoLane.right: 5 / 6,
+    };
+    final centerX = size.width / 2;
+    final laneCenter = laneCenters[state.currentLane]!;
+    final laneLeft = math.max(0.0, laneCenter - 1 / 6);
+    final laneRight = math.min(1.0, laneCenter + 1 / 6);
+    final topY = size.height * 0.31;
+    final bottomY = size.height * 0.94;
+    final topHalf = size.width * 0.075;
+    final bottomHalf = size.width * 0.41;
+    final guide = Path()
+      ..moveTo(centerX - topHalf + topHalf * 2 * laneLeft, topY)
+      ..lineTo(centerX - topHalf + topHalf * 2 * laneRight, topY)
+      ..lineTo(centerX - bottomHalf + bottomHalf * 2 * laneRight, bottomY)
+      ..lineTo(centerX - bottomHalf + bottomHalf * 2 * laneLeft, bottomY)
+      ..close();
+
+    canvas.drawPath(
+      guide,
+      Paint()..color = _kidYellow.withValues(alpha: 0.09),
+    );
+  }
+
   void _drawScenery(Canvas canvas, Size size) {
-    final y = size.height * 0.47;
+    final y = size.height * 0.44;
     final barrierPaint = Paint()..color = _kidCoral;
     final capPaint = Paint()..color = _kidYellow;
 
     for (var side = -1; side <= 1; side += 2) {
       for (var index = 0; index < 5; index += 1) {
-        final x = size.width * (side < 0 ? 0.08 : 0.92);
-        final postY = y + index * size.height * 0.105;
-        final width = 28 + index * 8;
+        final x = size.width * (side < 0 ? 0.095 : 0.905);
+        final postY = y + index * size.height * 0.092;
+        final width = 20 + index * 6;
         final rect = Rect.fromCenter(
           center: Offset(x, postY),
           width: width.toDouble(),
@@ -305,7 +336,7 @@ class NinjaGoPainter extends CustomPainter {
     };
     final center = base.translate(0, actionLift);
     final isSliding = state.runnerAction == NinjaGoRunnerAction.sliding;
-    final bodyWidth = math.min(72.0, size.width * 0.17);
+    final bodyWidth = math.min(58.0, size.width * 0.14);
     final bodyHeight = isSliding ? bodyWidth * 0.62 : bodyWidth * 1.2;
 
     final shadowRect = Rect.fromCenter(
@@ -392,102 +423,6 @@ class NinjaGoPainter extends CustomPainter {
     );
   }
 
-  void _drawHud(Canvas canvas, Size size) {
-    final top = math.max(12.0, size.height * 0.035);
-    const sidePadding = 12.0;
-    const gap = 8.0;
-    const minReadablePillWidth = 80.0;
-    final availableWidth = math.max(0.0, size.width - sidePadding * 2);
-    final rowPillWidth = (availableWidth - gap * 3) / 4;
-    final speedLabel = 'Speed x${state.speed.toStringAsFixed(1)}';
-
-    if (rowPillWidth >= minReadablePillWidth) {
-      final labels = [
-        'Score ${state.score}',
-        'Stars ${state.stars}',
-        speedLabel,
-        '${state.distance.floor()} m',
-      ];
-      final colors = [
-        Colors.white.withValues(alpha: 0.9),
-        _kidYellow.withValues(alpha: 0.92),
-        Colors.white.withValues(alpha: 0.9),
-        Colors.white.withValues(alpha: 0.9),
-      ];
-
-      for (var index = 0; index < labels.length; index += 1) {
-        _drawPill(
-          canvas,
-          Offset(sidePadding + index * (rowPillWidth + gap), top),
-          labels[index],
-          width: rowPillWidth,
-          color: colors[index],
-        );
-      }
-      return;
-    }
-
-    final halfPillWidth = (availableWidth - gap) / 2;
-    _drawPill(
-      canvas,
-      Offset(sidePadding, top),
-      'Score ${state.score}',
-      width: halfPillWidth,
-      color: Colors.white.withValues(alpha: 0.9),
-    );
-    _drawPill(
-      canvas,
-      Offset(sidePadding + halfPillWidth + gap, top),
-      'Stars ${state.stars}',
-      width: halfPillWidth,
-      color: _kidYellow.withValues(alpha: 0.92),
-    );
-    _drawPill(
-      canvas,
-      Offset(sidePadding, top + 38),
-      speedLabel,
-      width: halfPillWidth,
-      color: Colors.white.withValues(alpha: 0.9),
-    );
-    _drawPill(
-      canvas,
-      Offset(sidePadding + halfPillWidth + gap, top + 38),
-      '${state.distance.floor()} m',
-      width: halfPillWidth,
-      color: Colors.white.withValues(alpha: 0.9),
-    );
-  }
-
-  void _drawPill(
-    Canvas canvas,
-    Offset offset,
-    String label, {
-    required double width,
-    required Color color,
-  }) {
-    final rect = RRect.fromRectAndRadius(
-      Rect.fromLTWH(offset.dx, offset.dy, width, 32),
-      const Radius.circular(16),
-    );
-    canvas.drawRRect(rect, Paint()..color = color);
-    canvas.drawRRect(
-      rect,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2
-        ..color = _ink.withValues(alpha: 0.12),
-    );
-    _drawText(
-      canvas,
-      label,
-      rect.outerRect.center,
-      maxWidth: width - 14,
-      fontSize: 13,
-      fontWeight: FontWeight.w900,
-      textAlign: TextAlign.center,
-    );
-  }
-
   void _drawGameOverOverlay(Canvas canvas, Size size) {
     canvas.drawRect(
       Offset.zero & size,
@@ -549,15 +484,15 @@ class NinjaGoPainter extends CustomPainter {
 
   double _trackHalfWidth(Size size, double position) {
     final t = (1 - position).clamp(0.0, 1.2);
-    final topHalf = size.width * 0.12;
-    final bottomHalf = size.width * 0.54;
+    final topHalf = size.width * 0.075;
+    final bottomHalf = size.width * 0.41;
 
     return topHalf + (bottomHalf - topHalf) * t;
   }
 
   double _yForPosition(Size size, double position) {
-    final horizon = size.height * 0.36;
-    final bottom = size.height * 0.98;
+    final horizon = size.height * 0.31;
+    final bottom = size.height * 0.9;
     final t = (1 - position).clamp(0.0, 1.16);
 
     return horizon + (bottom - horizon) * math.pow(t, 1.35);
@@ -566,7 +501,7 @@ class NinjaGoPainter extends CustomPainter {
   double _scaleForPosition(double position) {
     final t = (1 - position).clamp(0.0, 1.0);
 
-    return 0.24 + t * 0.9;
+    return 0.2 + t * 0.74;
   }
 
   void _drawStar(Canvas canvas, Offset center, double radius) {
