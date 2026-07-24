@@ -259,6 +259,39 @@ void main() {
       RunnerFeedbackAction.lightImpact,
     ]);
   });
+
+  testWidgets('small phone layout supports a complete level flow',
+      (tester) async {
+    tester.view.physicalSize = const Size(320, 568);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await pumpNinjaRunner(tester);
+    expect(tester.takeException(), isNull);
+    expect(find.text('Start Run'), findsOneWidget);
+
+    await tester.tap(find.text('Start Run'));
+    await tester.pump();
+    expect(tester.takeException(), isNull);
+    expect(find.text('share'), findsOneWidget);
+    expect(find.text('grab'), findsOneWidget);
+
+    for (final answer in ['share', 'gentle', 'try again', 'listen', 'cheer']) {
+      await tester.tap(find.text(answer));
+      await tester.pump();
+      expect(tester.takeException(), isNull);
+      final keepRunning = find.text('Keep Running');
+      if (keepRunning.evaluate().isNotEmpty) {
+        await tester.tap(keepRunning);
+        await tester.pump();
+        expect(tester.takeException(), isNull);
+      }
+    }
+
+    expect(find.text('Perfect run!'), findsOneWidget);
+    expect(find.text('Next Level'), findsOneWidget);
+  });
 }
 
 Future<void> pumpNinjaRunner(

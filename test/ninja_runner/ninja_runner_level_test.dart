@@ -13,7 +13,7 @@ void main() {
     ]);
     expect(
       levels.map((level) => level.runnerSpeed),
-      [0.12, 0.16, 0.2, 0.24],
+      [0.1, 0.125, 0.15, 0.175],
     );
     expect(levels.map((level) => level.requiredScore), [0, 4, 5, 5]);
     expect(

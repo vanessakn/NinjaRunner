@@ -68,6 +68,8 @@ flutter build web --release --base-href=/ --no-wasm-dry-run
 - `test/widget_test.dart`: end-to-end widget behavior
 - `test/ninja_runner/`: model, controller, analytics, and progress tests
 - `docs/assets.md`: expected character/background asset filenames
+- `docs/mobile-qa-handoff.md`: real-device QA checklist
+- `docs/team-checkpoint.md`: current shareable team checkpoint
 
 ## Build Notes
 
