@@ -73,6 +73,8 @@ class NinjaGoController {
     final speed = 1 + state.distance / 280;
     final distance = state.distance + deltaSeconds * speed * 16;
     final scoreBonus = math.max(0, state.score - state.distance.floor());
+    final actionAtTickStart = state.runnerAction;
+    final actionTimeAtTickStart = state.actionTimeRemaining;
     final nextActionTime = math.max(
       0.0,
       state.actionTimeRemaining - deltaSeconds,
@@ -111,7 +113,12 @@ class NinjaGoController {
       speed: speed,
     );
 
-    _resolveHitWindow(movedEntities);
+    _resolveHitWindow(
+      movedEntities,
+      actionAtTickStart: actionAtTickStart,
+      actionTimeAtTickStart: actionTimeAtTickStart,
+      deltaSeconds: deltaSeconds,
+    );
   }
 
   void debugSetEntities(List<NinjaGoEntity> entities) {
@@ -144,7 +151,12 @@ class NinjaGoController {
     );
   }
 
-  void _resolveHitWindow(List<_NinjaGoEntityMovement> movedEntities) {
+  void _resolveHitWindow(
+    List<_NinjaGoEntityMovement> movedEntities, {
+    required NinjaGoRunnerAction actionAtTickStart,
+    required double actionTimeAtTickStart,
+    required double deltaSeconds,
+  }) {
     var stars = state.stars;
     var score = state.score;
     var shouldEndRun = false;
@@ -168,7 +180,14 @@ class NinjaGoController {
         continue;
       }
 
-      if (_collidesWith(entity)) {
+      final actionAtHit = _actionAtHitTime(
+        movement,
+        actionAtTickStart: actionAtTickStart,
+        actionTimeAtTickStart: actionTimeAtTickStart,
+        deltaSeconds: deltaSeconds,
+      );
+
+      if (_collidesWith(entity, actionAtHit)) {
         shouldEndRun = true;
       }
 
@@ -203,14 +222,51 @@ class NinjaGoController {
     return segmentStart <= upperBound && segmentEnd >= lowerBound;
   }
 
-  bool _collidesWith(NinjaGoEntity entity) {
+  NinjaGoRunnerAction _actionAtHitTime(
+    _NinjaGoEntityMovement movement, {
+    required NinjaGoRunnerAction actionAtTickStart,
+    required double actionTimeAtTickStart,
+    required double deltaSeconds,
+  }) {
+    if (actionAtTickStart == NinjaGoRunnerAction.running) {
+      return NinjaGoRunnerAction.running;
+    }
+
+    final hitElapsedSeconds = _hitFraction(movement) * deltaSeconds;
+
+    if (hitElapsedSeconds <= actionTimeAtTickStart) {
+      return actionAtTickStart;
+    }
+
+    return NinjaGoRunnerAction.running;
+  }
+
+  double _hitFraction(_NinjaGoEntityMovement movement) {
+    final previousPosition = movement.previousPosition;
+    final nextPosition = movement.entity.position;
+
+    if (previousPosition == nextPosition) {
+      return 0;
+    }
+
+    const lowerBound = hitPosition - hitWindow;
+    const upperBound = hitPosition + hitWindow;
+    final hitBoundary =
+        previousPosition > nextPosition ? upperBound : lowerBound;
+    final fraction =
+        (previousPosition - hitBoundary) / (previousPosition - nextPosition);
+
+    return fraction.clamp(0.0, 1.0);
+  }
+
+  bool _collidesWith(NinjaGoEntity entity, NinjaGoRunnerAction actionAtHit) {
     return switch (entity.kind) {
       NinjaGoEntityKind.star => false,
       NinjaGoEntityKind.laneBlocker => true,
       NinjaGoEntityKind.groundBarrier =>
-        state.runnerAction != NinjaGoRunnerAction.jumping,
+        actionAtHit != NinjaGoRunnerAction.jumping,
       NinjaGoEntityKind.overheadObstacle =>
-        state.runnerAction != NinjaGoRunnerAction.sliding,
+        actionAtHit != NinjaGoRunnerAction.sliding,
     };
   }
 

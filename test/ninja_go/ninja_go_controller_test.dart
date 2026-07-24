@@ -186,6 +186,50 @@ void main() {
       expect(controller.state.phase, NinjaGoPhase.running);
     });
 
+    test('jumping avoids swept ground barriers crossed before jump expires',
+        () {
+      final controller = NinjaGoController(seed: 7)..startRun();
+
+      controller.jump();
+      controller.debugSetEntities([
+        const NinjaGoEntity(
+          id: 1,
+          kind: NinjaGoEntityKind.groundBarrier,
+          lane: NinjaGoLane.center,
+          position: NinjaGoController.hitPosition +
+              NinjaGoController.hitWindow +
+              0.01,
+        ),
+      ]);
+
+      controller.tick(0.7);
+
+      expect(controller.state.runnerAction, NinjaGoRunnerAction.running);
+      expect(controller.state.phase, NinjaGoPhase.running);
+    });
+
+    test('sliding avoids swept overhead obstacles crossed before slide expires',
+        () {
+      final controller = NinjaGoController(seed: 7)..startRun();
+
+      controller.slide();
+      controller.debugSetEntities([
+        const NinjaGoEntity(
+          id: 1,
+          kind: NinjaGoEntityKind.overheadObstacle,
+          lane: NinjaGoLane.center,
+          position: NinjaGoController.hitPosition +
+              NinjaGoController.hitWindow +
+              0.01,
+        ),
+      ]);
+
+      controller.tick(0.7);
+
+      expect(controller.state.runnerAction, NinjaGoRunnerAction.running);
+      expect(controller.state.phase, NinjaGoPhase.running);
+    });
+
     test('spawns deterministic entity sequences with the same seed', () {
       final first = NinjaGoController(seed: 7)..startRun();
       final second = NinjaGoController(seed: 7)..startRun();
