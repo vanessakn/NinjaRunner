@@ -83,15 +83,23 @@ class NinjaGoController {
     _spawnTimer -= deltaSeconds;
     final movedEntities = state.entities
         .map(
-          (entity) => entity.copyWith(
-            position: entity.position - deltaSeconds * speed * 0.38,
+          (entity) => _NinjaGoEntityMovement(
+            previousPosition: entity.position,
+            entity: entity.copyWith(
+              position: entity.position - deltaSeconds * speed * 0.38,
+            ),
           ),
         )
-        .where((entity) => !entity.collected && !entity.isPastRunner)
         .toList();
 
     if (_spawnTimer <= 0) {
-      movedEntities.add(_createEntity());
+      final entity = _createEntity();
+      movedEntities.add(
+        _NinjaGoEntityMovement(
+          previousPosition: entity.position,
+          entity: entity,
+        ),
+      );
       _spawnTimer = math.max(0.52, 1.15 - speed * 0.08);
     }
 
@@ -101,10 +109,9 @@ class NinjaGoController {
       distance: distance,
       score: distance.floor() + scoreBonus,
       speed: speed,
-      entities: movedEntities,
     );
 
-    _resolveHitWindow();
+    _resolveHitWindow(movedEntities);
   }
 
   void debugSetEntities(List<NinjaGoEntity> entities) {
@@ -112,10 +119,12 @@ class NinjaGoController {
   }
 
   NinjaGoLane _shiftLane(int direction) {
-    final nextIndex = (state.currentLane.index + direction).clamp(
-      0,
-      NinjaGoLane.values.length - 1,
-    );
+    final nextIndex = (state.currentLane.index + direction)
+        .clamp(
+          0,
+          NinjaGoLane.values.length - 1,
+        )
+        .toInt();
 
     return NinjaGoLane.values[nextIndex];
   }
@@ -135,18 +144,21 @@ class NinjaGoController {
     );
   }
 
-  void _resolveHitWindow() {
+  void _resolveHitWindow(List<_NinjaGoEntityMovement> movedEntities) {
     var stars = state.stars;
     var score = state.score;
     var shouldEndRun = false;
     final entities = <NinjaGoEntity>[];
 
-    for (final entity in state.entities) {
+    for (final movement in movedEntities) {
+      final entity = movement.entity;
       final inCurrentLane = entity.lane == state.currentLane;
-      final inHitWindow = (entity.position - hitPosition).abs() <= hitWindow;
+      final inHitWindow = _movementIntersectsHitWindow(movement);
 
       if (!inCurrentLane || !inHitWindow) {
-        entities.add(entity);
+        if (!entity.collected && !entity.isPastRunner) {
+          entities.add(entity);
+        }
         continue;
       }
 
@@ -160,7 +172,9 @@ class NinjaGoController {
         shouldEndRun = true;
       }
 
-      entities.add(entity);
+      if (!entity.collected && !entity.isPastRunner) {
+        entities.add(entity);
+      }
     }
 
     state = state.copyWith(
@@ -172,6 +186,21 @@ class NinjaGoController {
     if (shouldEndRun) {
       _endRun();
     }
+  }
+
+  bool _movementIntersectsHitWindow(_NinjaGoEntityMovement movement) {
+    const lowerBound = hitPosition - hitWindow;
+    const upperBound = hitPosition + hitWindow;
+    final segmentStart = math.min(
+      movement.previousPosition,
+      movement.entity.position,
+    );
+    final segmentEnd = math.max(
+      movement.previousPosition,
+      movement.entity.position,
+    );
+
+    return segmentStart <= upperBound && segmentEnd >= lowerBound;
   }
 
   bool _collidesWith(NinjaGoEntity entity) {
@@ -192,4 +221,14 @@ class NinjaGoController {
       bestScore: math.max(state.bestScore, state.score),
     );
   }
+}
+
+class _NinjaGoEntityMovement {
+  const _NinjaGoEntityMovement({
+    required this.previousPosition,
+    required this.entity,
+  });
+
+  final double previousPosition;
+  final NinjaGoEntity entity;
 }

@@ -84,6 +84,28 @@ void main() {
       expect(controller.state.entities, isEmpty);
     });
 
+    test('collects current lane star when a large tick crosses the hit window',
+        () {
+      final controller = NinjaGoController(seed: 7)..startRun();
+
+      controller.debugSetEntities([
+        const NinjaGoEntity(
+          id: 1,
+          kind: NinjaGoEntityKind.star,
+          lane: NinjaGoLane.center,
+          position: NinjaGoController.hitPosition +
+              NinjaGoController.hitWindow +
+              0.01,
+        ),
+      ]);
+
+      controller.tick(0.6);
+
+      expect(controller.state.stars, 1);
+      expect(controller.state.score, greaterThanOrEqualTo(50));
+      expect(controller.state.entities, isEmpty);
+    });
+
     test('current lane lane blocker in the hit window ends the run', () {
       final controller = NinjaGoController(seed: 7)..startRun();
 
@@ -106,6 +128,29 @@ void main() {
           greaterThanOrEqualTo(distanceBeforeCollision));
       expect(controller.state.bestScore,
           greaterThanOrEqualTo(scoreBeforeCollision));
+    });
+
+    test(
+        'current lane lane blocker ends the run when a large tick crosses the hit window',
+        () {
+      final controller = NinjaGoController(seed: 7)..startRun();
+
+      controller.debugSetEntities([
+        const NinjaGoEntity(
+          id: 1,
+          kind: NinjaGoEntityKind.laneBlocker,
+          lane: NinjaGoLane.center,
+          position: NinjaGoController.hitPosition +
+              NinjaGoController.hitWindow +
+              0.01,
+        ),
+      ]);
+
+      controller.tick(0.6);
+
+      expect(controller.state.phase, NinjaGoPhase.gameOver);
+      expect(controller.state.bestDistance, controller.state.distance);
+      expect(controller.state.bestScore, controller.state.score);
     });
 
     test('jumping avoids ground barriers and sliding avoids overhead obstacles',
