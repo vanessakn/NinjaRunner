@@ -18,6 +18,7 @@ placeholder runner.
 
 ```text
 assets/characters/jordan.png
+assets/characters/jordan-purple.png
 assets/characters/nari.png
 assets/characters/arjun.png
 assets/characters/bjorn.png
@@ -29,7 +30,9 @@ in the image.
 The current character files are first-pass prototype cuts from supplied art.
 They are suitable for visual playtesting, but should be replaced with clean
 production exports when final KidNation art is available. Jordan currently uses
-the newer purple-kit full-body artwork with its background removed.
+the newer purple-kit full-body artwork with its background removed at
+`assets/characters/jordan-purple.png`. The original `jordan.png` prototype is
+kept only as an older reference.
 
 ## Background Files
 
