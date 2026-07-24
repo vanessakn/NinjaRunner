@@ -372,29 +372,84 @@ abstract class RunnerFeedbackEffects {
   void playLevelComplete();
 }
 
+enum RunnerFeedbackAction {
+  selectionClick,
+  lightImpact,
+  mediumImpact,
+  heavyImpact,
+  clickSound,
+  alertSound,
+}
+
+abstract class RunnerFeedbackActionPlayer {
+  void play(RunnerFeedbackAction action);
+}
+
+class PlatformRunnerFeedbackActionPlayer implements RunnerFeedbackActionPlayer {
+  @override
+  void play(RunnerFeedbackAction action) {
+    switch (action) {
+      case RunnerFeedbackAction.selectionClick:
+        HapticFeedback.selectionClick();
+      case RunnerFeedbackAction.lightImpact:
+        HapticFeedback.lightImpact();
+      case RunnerFeedbackAction.mediumImpact:
+        HapticFeedback.mediumImpact();
+      case RunnerFeedbackAction.heavyImpact:
+        HapticFeedback.heavyImpact();
+      case RunnerFeedbackAction.clickSound:
+        SystemSound.play(SystemSoundType.click);
+      case RunnerFeedbackAction.alertSound:
+        SystemSound.play(SystemSoundType.alert);
+    }
+  }
+}
+
 class PlatformRunnerFeedbackEffects implements RunnerFeedbackEffects {
+  PlatformRunnerFeedbackEffects({
+    RunnerFeedbackActionPlayer? actionPlayer,
+  }) : _actionPlayer = actionPlayer ?? PlatformRunnerFeedbackActionPlayer();
+
+  final RunnerFeedbackActionPlayer _actionPlayer;
+
   @override
   void playRoundStart() {
-    HapticFeedback.selectionClick();
-    SystemSound.play(SystemSoundType.click);
+    _play(const [
+      RunnerFeedbackAction.selectionClick,
+      RunnerFeedbackAction.clickSound,
+    ]);
   }
 
   @override
   void playCorrectAnswer() {
-    HapticFeedback.lightImpact();
-    SystemSound.play(SystemSoundType.click);
+    _play(const [
+      RunnerFeedbackAction.lightImpact,
+      RunnerFeedbackAction.clickSound,
+      RunnerFeedbackAction.selectionClick,
+    ]);
   }
 
   @override
   void playWrongAnswer() {
-    HapticFeedback.mediumImpact();
-    SystemSound.play(SystemSoundType.alert);
+    _play(const [
+      RunnerFeedbackAction.mediumImpact,
+      RunnerFeedbackAction.alertSound,
+    ]);
   }
 
   @override
   void playLevelComplete() {
-    HapticFeedback.heavyImpact();
-    SystemSound.play(SystemSoundType.click);
+    _play(const [
+      RunnerFeedbackAction.heavyImpact,
+      RunnerFeedbackAction.clickSound,
+      RunnerFeedbackAction.lightImpact,
+    ]);
+  }
+
+  void _play(List<RunnerFeedbackAction> actions) {
+    for (final action in actions) {
+      _actionPlayer.play(action);
+    }
   }
 }
 
@@ -705,8 +760,8 @@ class _Controls extends StatelessWidget {
                 children: [
                   Text(
                     state.lastResult?.isCorrect == true
-                        ? 'Streak Boost!'
-                        : 'Slow down and try again',
+                        ? 'Nice choice!'
+                        : 'Almost there',
                     textAlign: TextAlign.center,
                     style: Theme.of(
                       context,
@@ -813,9 +868,9 @@ class _Controls extends StatelessWidget {
       return '';
     }
     if (result.isCorrect) {
-      return '+1 star';
+      return 'Kind gate! +1 star';
     }
-    return 'Correct gate: ${controller.currentPrompt.correctAnswer.label}';
+    return 'Try the ${controller.currentPrompt.correctAnswer.label} gate next';
   }
 }
 

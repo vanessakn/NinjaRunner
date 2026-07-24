@@ -208,8 +208,8 @@ void main() {
     await tester.pump();
 
     expect(feedbackEffects.events, ['start', 'correct']);
-    expect(find.text('Streak Boost!'), findsOneWidget);
-    expect(find.text('+1 star'), findsOneWidget);
+    expect(find.text('Nice choice!'), findsOneWidget);
+    expect(find.text('Kind gate! +1 star'), findsOneWidget);
     expect(find.text('Streak 1'), findsOneWidget);
     expect(find.text('Keep Running'), findsOneWidget);
   });
@@ -229,9 +229,35 @@ void main() {
     await tester.pump();
 
     expect(feedbackEffects.events, ['start', 'wrong']);
-    expect(find.text('Slow down and try again'), findsOneWidget);
-    expect(find.text('Correct gate: share'), findsOneWidget);
+    expect(find.text('Almost there'), findsOneWidget);
+    expect(find.text('Try the share gate next'), findsOneWidget);
     expect(find.text('Streak 0'), findsOneWidget);
+  });
+
+  testWidgets('platform feedback effects use polished sound and haptic cues',
+      (tester) async {
+    final actionPlayer = RecordingFeedbackActionPlayer();
+    final feedbackEffects = PlatformRunnerFeedbackEffects(
+      actionPlayer: actionPlayer,
+    );
+
+    feedbackEffects.playRoundStart();
+    feedbackEffects.playCorrectAnswer();
+    feedbackEffects.playWrongAnswer();
+    feedbackEffects.playLevelComplete();
+
+    expect(actionPlayer.actions, [
+      RunnerFeedbackAction.selectionClick,
+      RunnerFeedbackAction.clickSound,
+      RunnerFeedbackAction.lightImpact,
+      RunnerFeedbackAction.clickSound,
+      RunnerFeedbackAction.selectionClick,
+      RunnerFeedbackAction.mediumImpact,
+      RunnerFeedbackAction.alertSound,
+      RunnerFeedbackAction.heavyImpact,
+      RunnerFeedbackAction.clickSound,
+      RunnerFeedbackAction.lightImpact,
+    ]);
   });
 }
 
@@ -270,5 +296,14 @@ class RecordingRunnerFeedbackEffects implements RunnerFeedbackEffects {
   @override
   void playWrongAnswer() {
     events.add('wrong');
+  }
+}
+
+class RecordingFeedbackActionPlayer implements RunnerFeedbackActionPlayer {
+  final actions = <RunnerFeedbackAction>[];
+
+  @override
+  void play(RunnerFeedbackAction action) {
+    actions.add(action);
   }
 }
