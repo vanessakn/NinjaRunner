@@ -506,7 +506,9 @@ class RunnerPainter extends CustomPainter {
       streak: state.streak,
       dodgeDirection: _selectedDodgeDirection(),
     );
-    final armSwing = state.phase == RunnerPhase.running
+    final isRunnerInMotion =
+        state.phase == RunnerPhase.running || _selectedDodgeDirection() != 0;
+    final armSwing = isRunnerInMotion
         ? math.sin(state.runnerProgress * math.pi * 12) * 8
         : 0.0;
     final runnerCenter = motion.runnerCenter;

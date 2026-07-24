@@ -60,10 +60,11 @@ void main() {
     expect(rightStep.legStride, lessThan(0));
   });
 
-  test('dodge pose plants one foot and leans harder into the lane change', () {
+  test('dodge pose keeps running stride while leaning into the lane change',
+      () {
     final centered = RunnerMotion.calculate(
       size: const Size(390, 720),
-      progress: 0.72,
+      progress: 0.12,
       isRunning: false,
       hasPositiveFeedback: false,
       streak: 0,
@@ -71,7 +72,7 @@ void main() {
     );
     final leftDodge = RunnerMotion.calculate(
       size: const Size(390, 720),
-      progress: 0.72,
+      progress: 0.12,
       isRunning: false,
       hasPositiveFeedback: false,
       streak: 0,
@@ -79,7 +80,7 @@ void main() {
     );
     final rightDodge = RunnerMotion.calculate(
       size: const Size(390, 720),
-      progress: 0.72,
+      progress: 0.12,
       isRunning: false,
       hasPositiveFeedback: false,
       streak: 0,
@@ -90,8 +91,10 @@ void main() {
         leftDodge.leanRadians.abs(), greaterThan(centered.leanRadians.abs()));
     expect(
         rightDodge.leanRadians.abs(), greaterThan(centered.leanRadians.abs()));
-    expect(leftDodge.leftFootLift, greaterThan(leftDodge.rightFootLift));
+    expect(leftDodge.rightFootLift, greaterThan(leftDodge.leftFootLift));
     expect(rightDodge.rightFootLift, greaterThan(rightDodge.leftFootLift));
+    expect(leftDodge.legStride, lessThan(0));
+    expect(rightDodge.legStride, lessThan(0));
   });
 
   test('correct feedback exposes celebration accents around runner', () {

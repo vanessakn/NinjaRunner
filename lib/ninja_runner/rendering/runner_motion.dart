@@ -44,22 +44,12 @@ class RunnerMotion {
         size.width <= 560 ? math.min(size.width, 336) : size.width;
     final scale = (size.height / 420).clamp(0.68, 1).toDouble();
     final phase = math.sin(clampedProgress * math.pi * 12);
-    final bounce = isRunning ? phase * 5.5 * scale : 0.0;
     final clampedDodge = dodgeDirection.clamp(-1, 1).toDouble();
-    final runningStride = isRunning ? phase * 14 * scale : 0.0;
-    final dodgeStride =
-        !isRunning && clampedDodge != 0 ? clampedDodge * 8 * scale : 0.0;
-    final legStride = runningStride + dodgeStride;
-    final leftFootLift = isRunning
-        ? math.max(phase, 0) * 9 * scale
-        : clampedDodge < 0
-            ? 5 * scale
-            : 0.0;
-    final rightFootLift = isRunning
-        ? math.max(-phase, 0) * 9 * scale
-        : clampedDodge > 0
-            ? 5 * scale
-            : 0.0;
+    final isInMotion = isRunning || clampedDodge != 0;
+    final bounce = isInMotion ? phase * 5.5 * scale : 0.0;
+    final legStride = isInMotion ? phase * 14 * scale : 0.0;
+    final leftFootLift = isInMotion ? math.max(phase, 0) * 9 * scale : 0.0;
+    final rightFootLift = isInMotion ? math.max(-phase, 0) * 9 * scale : 0.0;
     final shoeLift = math.max(leftFootLift, rightFootLift);
     final dodgeDistance = clampedDodge * playWidth * 0.16 * scale;
     final leanRadians = (isRunning ? phase * 0.04 : 0.0) + clampedDodge * 0.16;
