@@ -5,7 +5,7 @@ void main() {
   test('maps known placeholder character ids to future asset paths', () {
     expect(
       RunnerAssetResolver.characterPath('character-jordan-placeholder'),
-      'assets/characters/jordan-purple.png',
+      'assets/characters/jordan-runner.png',
     );
     expect(
       RunnerAssetResolver.characterPath('character-nari-placeholder'),

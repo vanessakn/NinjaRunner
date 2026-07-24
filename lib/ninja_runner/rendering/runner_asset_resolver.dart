@@ -3,7 +3,7 @@ class RunnerAssetResolver {
 
   static String? characterPath(String? portraitAssetId) {
     return switch (portraitAssetId) {
-      'character-jordan-placeholder' => 'assets/characters/jordan-purple.png',
+      'character-jordan-placeholder' => 'assets/characters/jordan-runner.png',
       'character-nari-placeholder' => 'assets/characters/nari.png',
       'character-arjun-placeholder' => 'assets/characters/arjun.png',
       'character-bjorn-placeholder' => 'assets/characters/bjorn.png',
