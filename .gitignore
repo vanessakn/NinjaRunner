@@ -1,2 +1,12 @@
 .superpowers/
 .worktrees/
+.dart_tool/
+.idea/
+.DS_Store
+build/
+*.iml
+
+# Flutter/Dart generated files.
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
