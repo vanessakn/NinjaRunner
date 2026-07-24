@@ -21,4 +21,5 @@ dev_dependencies:
 flutter:
   assets:
     - assets/audio/bubble_blast/
+    - assets/characters/
   uses-material-design: true

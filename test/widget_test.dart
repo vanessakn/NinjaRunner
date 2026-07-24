@@ -170,6 +170,7 @@ void main() {
     await tester.pump();
 
     expect(find.text('Score'), findsOneWidget);
+    expect(find.byKey(const Key('ninja-go-runner-sprite')), findsOneWidget);
     expect(find.text('Jump'), findsOneWidget);
     expect(find.text('Slide'), findsOneWidget);
   });

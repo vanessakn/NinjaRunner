@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
@@ -86,6 +88,7 @@ class _NinjaGoScreenState extends State<NinjaGoScreen>
                         painter: NinjaGoPainter(state: state),
                         child: const SizedBox.expand(),
                       ),
+                      _RunnerSprite(state: state),
                       _SwipeHint(
                           isRunning: state.phase == NinjaGoPhase.running),
                       _ActionButtons(
@@ -188,6 +191,95 @@ class _NinjaGoScreenState extends State<NinjaGoScreen>
     if (_ticker.isActive) {
       _ticker.stop();
     }
+  }
+}
+
+class _RunnerSprite extends StatelessWidget {
+  const _RunnerSprite({required this.state});
+
+  static const _assetPath = 'assets/characters/jordan_ninja_go_runner.png';
+
+  final NinjaGoState state;
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned.fill(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final size = Size(constraints.maxWidth, constraints.maxHeight);
+          final base = _lanePoint(
+            size,
+            state.currentLane,
+            NinjaGoController.hitPosition,
+          );
+          final width = math.min(132.0, math.max(84.0, size.width * 0.25));
+          final height = width * 2.58;
+          final actionLift = switch (state.runnerAction) {
+            NinjaGoRunnerAction.running => 0.0,
+            NinjaGoRunnerAction.jumping => -size.height * 0.09,
+            NinjaGoRunnerAction.sliding => size.height * 0.035,
+          };
+          final isSliding = state.runnerAction == NinjaGoRunnerAction.sliding;
+          final top = base.dy - height * 0.8 + actionLift;
+          final left = base.dx - width / 2;
+
+          return IgnorePointer(
+            child: Stack(
+              children: [
+                AnimatedPositioned(
+                  duration: const Duration(milliseconds: 110),
+                  curve: Curves.easeOut,
+                  left: left,
+                  top: top,
+                  width: width,
+                  height: height,
+                  child: Transform(
+                    alignment: Alignment.bottomCenter,
+                    transform: Matrix4.diagonal3Values(
+                      isSliding ? 1.14 : 1.0,
+                      isSliding ? 0.62 : 1.0,
+                      1,
+                    ),
+                    child: Image.asset(
+                      _assetPath,
+                      key: const Key('ninja-go-runner-sprite'),
+                      fit: BoxFit.contain,
+                      filterQuality: FilterQuality.high,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Offset _lanePoint(Size size, NinjaGoLane lane, double position) {
+    final laneCenter = switch (lane) {
+      NinjaGoLane.left => 1 / 6,
+      NinjaGoLane.center => 3 / 6,
+      NinjaGoLane.right => 5 / 6,
+    };
+    final y = _yForPosition(size, position);
+    final halfWidth = _trackHalfWidth(size, position);
+    final centerX = size.width / 2;
+    return Offset(centerX - halfWidth + halfWidth * 2 * laneCenter, y);
+  }
+
+  double _yForPosition(Size size, double position) {
+    final horizon = size.height * 0.31;
+    final bottom = size.height * 0.9;
+    final t = (1 - position).clamp(0.0, 1.16);
+    return horizon + (bottom - horizon) * math.pow(t, 1.35);
+  }
+
+  double _trackHalfWidth(Size size, double position) {
+    final topHalf = size.width * 0.075;
+    final bottomHalf = size.width * 0.41;
+    final t = (1 - position).clamp(0.0, 1.2);
+    return topHalf + (bottomHalf - topHalf) * math.pow(t, 1.18);
   }
 }
 

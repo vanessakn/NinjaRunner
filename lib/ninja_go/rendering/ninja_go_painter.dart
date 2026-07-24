@@ -2,7 +2,6 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-import '../game/ninja_go_controller.dart';
 import '../models/ninja_go_models.dart';
 
 class NinjaGoPainter extends CustomPainter {
@@ -27,7 +26,6 @@ class NinjaGoPainter extends CustomPainter {
     _drawTrack(canvas, size);
     _drawScenery(canvas, size);
     _drawEntities(canvas, size);
-    _drawRunner(canvas, size);
 
     if (state.phase == NinjaGoPhase.gameOver) {
       _drawGameOverOverlay(canvas, size);
@@ -319,106 +317,6 @@ class NinjaGoPainter extends CustomPainter {
       fontSize: 18 + scale * 18,
       fontWeight: FontWeight.w900,
       color: _kidYellow,
-      textAlign: TextAlign.center,
-    );
-  }
-
-  void _drawRunner(Canvas canvas, Size size) {
-    final base = _lanePoint(
-      size,
-      state.currentLane,
-      NinjaGoController.hitPosition,
-    );
-    final actionLift = switch (state.runnerAction) {
-      NinjaGoRunnerAction.running => 0.0,
-      NinjaGoRunnerAction.jumping => -size.height * 0.07,
-      NinjaGoRunnerAction.sliding => size.height * 0.015,
-    };
-    final center = base.translate(0, actionLift);
-    final isSliding = state.runnerAction == NinjaGoRunnerAction.sliding;
-    final bodyWidth = math.min(58.0, size.width * 0.14);
-    final bodyHeight = isSliding ? bodyWidth * 0.62 : bodyWidth * 1.2;
-
-    final shadowRect = Rect.fromCenter(
-      center: base.translate(0, bodyWidth * 0.62),
-      width: bodyWidth * 1.05,
-      height: bodyWidth * 0.2,
-    );
-    canvas.drawOval(
-      shadowRect,
-      Paint()..color = _ink.withValues(alpha: 0.18),
-    );
-
-    final legPaint = Paint()
-      ..strokeWidth = math.max(4, bodyWidth * 0.08)
-      ..strokeCap = StrokeCap.round
-      ..color = _ink;
-    final legY = center.dy + bodyHeight * 0.5;
-    canvas.drawLine(
-      Offset(center.dx - bodyWidth * 0.16, legY - bodyWidth * 0.08),
-      Offset(center.dx - bodyWidth * 0.38, legY + bodyWidth * 0.28),
-      legPaint,
-    );
-    canvas.drawLine(
-      Offset(center.dx + bodyWidth * 0.16, legY - bodyWidth * 0.08),
-      Offset(center.dx + bodyWidth * 0.42, legY + bodyWidth * 0.18),
-      legPaint,
-    );
-
-    final body = RRect.fromRectAndRadius(
-      Rect.fromCenter(
-        center: center,
-        width: bodyWidth,
-        height: bodyHeight,
-      ),
-      Radius.circular(bodyWidth * 0.22),
-    );
-    canvas.drawRRect(body, Paint()..color = _kidYellow);
-    canvas.drawRRect(
-      body,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = math.max(3, bodyWidth * 0.07)
-        ..color = _ink,
-    );
-
-    final headRadius = bodyWidth * 0.34;
-    final headCenter = Offset(center.dx, body.top - headRadius * 0.62);
-    canvas.drawCircle(headCenter, headRadius, Paint()..color = _ink);
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromCenter(
-          center: headCenter.translate(0, headRadius * 0.05),
-          width: headRadius * 1.15,
-          height: headRadius * 0.58,
-        ),
-        Radius.circular(headRadius * 0.22),
-      ),
-      Paint()..color = Colors.white,
-    );
-    canvas.drawCircle(
-      headCenter.translate(-headRadius * 0.27, headRadius * 0.04),
-      headRadius * 0.08,
-      Paint()..color = _ink,
-    );
-    canvas.drawCircle(
-      headCenter.translate(headRadius * 0.27, headRadius * 0.04),
-      headRadius * 0.08,
-      Paint()..color = _ink,
-    );
-
-    canvas.drawCircle(
-      Offset(center.dx, center.dy - bodyHeight * 0.05),
-      bodyWidth * 0.23,
-      Paint()..color = Colors.white,
-    );
-    _drawText(
-      canvas,
-      'KN',
-      Offset(center.dx, center.dy - bodyHeight * 0.05),
-      maxWidth: bodyWidth * 0.42,
-      fontSize: bodyWidth * 0.2,
-      fontWeight: FontWeight.w900,
       textAlign: TextAlign.center,
     );
   }
