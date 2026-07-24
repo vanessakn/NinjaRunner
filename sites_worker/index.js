@@ -34,6 +34,10 @@ async function fetchAsset(env, request, url, assetPath) {
   const candidates = [
     normalized,
     normalized.slice(1),
+    `/client${normalized}`,
+    `client${normalized}`,
+    `/public${normalized}`,
+    `public${normalized}`,
     `/dist${normalized}`,
     `dist${normalized}`,
   ];
