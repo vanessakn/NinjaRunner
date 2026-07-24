@@ -150,12 +150,51 @@ void main() {
     expect(
         laterStride.groundAnchor.dx, greaterThan(earlyStride.groundAnchor.dx));
     expect(settled.groundAnchor.dx, greaterThan(laterStride.groundAnchor.dx));
-    expect(laterStride.groundAnchor.dy, earlyStride.groundAnchor.dy);
+    expect(laterStride.groundAnchor.dy, lessThan(earlyStride.groundAnchor.dy));
+    expect(settled.groundAnchor.dy, lessThan(laterStride.groundAnchor.dy));
     expect(earlyStride.leftFootLift, greaterThan(earlyStride.rightFootLift));
     expect(laterStride.rightFootLift, greaterThan(laterStride.leftFootLift));
     expect(settled.leftFootLift, 0);
     expect(settled.rightFootLift, 0);
     expect(settled.legStride, 0);
+  });
+
+  test('settled dodge lands near the selected gate instead of beside center',
+      () {
+    const size = Size(390, 720);
+    final playWidth = size.width <= 560 ? 336.0 : size.width;
+    final leftGateCenterX = playWidth * 0.3;
+    final rightGateCenterX = playWidth * 0.62;
+    final centered = RunnerMotion.calculate(
+      size: size,
+      progress: 0.7,
+      isRunning: false,
+      hasPositiveFeedback: false,
+      streak: 0,
+    );
+    final leftDodge = RunnerMotion.calculate(
+      size: size,
+      progress: 0.7,
+      isRunning: false,
+      hasPositiveFeedback: false,
+      streak: 0,
+      dodgeDirection: -1,
+      dodgeProgress: 1,
+    );
+    final rightDodge = RunnerMotion.calculate(
+      size: size,
+      progress: 0.7,
+      isRunning: false,
+      hasPositiveFeedback: false,
+      streak: 0,
+      dodgeDirection: 1,
+      dodgeProgress: 1,
+    );
+
+    expect(leftDodge.groundAnchor.dx, closeTo(leftGateCenterX, 0.1));
+    expect(rightDodge.groundAnchor.dx, closeTo(rightGateCenterX, 0.1));
+    expect(leftDodge.groundAnchor.dy, lessThan(centered.groundAnchor.dy));
+    expect(rightDodge.groundAnchor.dy, lessThan(centered.groundAnchor.dy));
   });
 
   test('correct feedback exposes celebration accents around runner', () {

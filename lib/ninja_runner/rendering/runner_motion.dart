@@ -70,7 +70,15 @@ class RunnerMotion {
     final shoeLift = math.max(leftFootLift, rightFootLift);
     final easedDodgeProgress = _easeOutCubic(clampedDodgeProgress);
     final effectiveDodge = clampedDodge * easedDodgeProgress;
-    final dodgeDistance = effectiveDodge * playWidth * 0.16 * scale;
+    final baseX = playWidth * 0.5;
+    final targetGateX = clampedDodge < 0
+        ? playWidth * 0.3
+        : clampedDodge > 0
+            ? playWidth * 0.62
+            : baseX;
+    final dodgeDistance = (targetGateX - baseX) * easedDodgeProgress;
+    final dodgeVerticalLift =
+        clampedDodge == 0 ? 0.0 : size.height * 0.11 * easedDodgeProgress;
     final leanRadians =
         (isRunning ? phase * 0.04 : 0.0) + effectiveDodge * 0.16;
 
@@ -78,7 +86,8 @@ class RunnerMotion {
         _lerp(size.height * 0.86, size.height * 0.61, clampedProgress);
     final spriteWidth = 128 * scale;
     final spriteHeight = 168 * scale;
-    final groundAnchor = Offset(playWidth * 0.5 + dodgeDistance, groundY);
+    final groundAnchor =
+        Offset(baseX + dodgeDistance, groundY - dodgeVerticalLift);
     final runnerCenter =
         groundAnchor.translate(0, -spriteHeight * 0.5 + bounce);
     final spriteRect = Rect.fromCenter(
