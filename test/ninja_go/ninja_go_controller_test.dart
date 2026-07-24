@@ -250,6 +250,49 @@ void main() {
       expect(firstSequence, secondSequence);
     });
 
+    test('gives players a longer grace beat before the first spawn', () {
+      final controller = NinjaGoController(seed: 7)..startRun();
+
+      controller.tick(1.0);
+
+      expect(controller.state.entities, isEmpty);
+    });
+
+    test('keeps lane blockers out of the opening stretch', () {
+      final controller = NinjaGoController(seed: 7)..startRun();
+
+      for (var i = 0; i < 30; i += 1) {
+        controller.tick(0.2);
+      }
+
+      expect(controller.state.distance, lessThan(90));
+      expect(
+        controller.state.entities
+            .where((entity) => entity.kind == NinjaGoEntityKind.laneBlocker),
+        isEmpty,
+      );
+    });
+
+    test('uses a forgiving near-miss hit window', () {
+      final controller = NinjaGoController(seed: 7)..startRun();
+
+      controller.debugSetEntities([
+        const NinjaGoEntity(
+          id: 1,
+          kind: NinjaGoEntityKind.laneBlocker,
+          lane: NinjaGoLane.center,
+          position: NinjaGoController.hitPosition +
+              NinjaGoController.hitWindow +
+              0.005,
+        ),
+      ]);
+
+      controller.tick(0.01);
+
+      expect(controller.state.phase, NinjaGoPhase.running);
+      expect(controller.state.entities, isNotEmpty);
+    });
+
     test('ignores movement and actions before the run starts', () {
       final controller = NinjaGoController(seed: 7);
 

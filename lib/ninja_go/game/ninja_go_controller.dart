@@ -10,16 +10,18 @@ class NinjaGoController {
   static const double jumpDuration = 0.62;
   static const double slideDuration = 0.58;
   static const double hitPosition = 0.12;
-  static const double hitWindow = 0.09;
+  static const double hitWindow = 0.075;
   static const int starBonus = 50;
+  static const double _openingSpawnDelay = 1.1;
+  static const double _openingNoBlockerDistance = 90;
 
   final math.Random _random;
-  double _spawnTimer = 0.85;
+  double _spawnTimer = _openingSpawnDelay;
   int _nextEntityId = 1;
   NinjaGoState state;
 
   void startRun() {
-    _spawnTimer = 0.85;
+    _spawnTimer = _openingSpawnDelay;
     _nextEntityId = 1;
     state = NinjaGoState.initial(
       bestDistance: state.bestDistance,
@@ -70,8 +72,8 @@ class NinjaGoController {
       return;
     }
 
-    final speed = 1 + state.distance / 280;
-    final distance = state.distance + deltaSeconds * speed * 16;
+    final speed = 1 + state.distance / 460;
+    final distance = state.distance + deltaSeconds * speed * 13.5;
     final scoreBonus = math.max(0, state.score - state.distance.floor());
     final actionAtTickStart = state.runnerAction;
     final actionTimeAtTickStart = state.actionTimeRemaining;
@@ -88,7 +90,7 @@ class NinjaGoController {
           (entity) => _NinjaGoEntityMovement(
             previousPosition: entity.position,
             entity: entity.copyWith(
-              position: entity.position - deltaSeconds * speed * 0.38,
+              position: entity.position - deltaSeconds * speed * 0.32,
             ),
           ),
         )
@@ -102,7 +104,7 @@ class NinjaGoController {
           entity: entity,
         ),
       );
-      _spawnTimer = math.max(0.52, 1.15 - speed * 0.08);
+      _spawnTimer = math.max(0.72, 1.25 - speed * 0.06);
     }
 
     state = state.copyWith(
@@ -138,9 +140,13 @@ class NinjaGoController {
 
   NinjaGoEntity _createEntity() {
     final roll = _random.nextInt(10);
-    final kind = roll < 3
+    final generatedKind = roll < 4
         ? NinjaGoEntityKind.star
         : NinjaGoEntityKind.values[_random.nextInt(3)];
+    final kind = generatedKind == NinjaGoEntityKind.laneBlocker &&
+            state.distance < _openingNoBlockerDistance
+        ? NinjaGoEntityKind.values[_random.nextInt(2)]
+        : generatedKind;
     final lane = NinjaGoLane.values[_random.nextInt(NinjaGoLane.values.length)];
 
     return NinjaGoEntity(
