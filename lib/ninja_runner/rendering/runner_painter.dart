@@ -504,12 +504,14 @@ class RunnerPainter extends CustomPainter {
       hasPositiveFeedback:
           state.streak > 0 || state.lastResult?.isCorrect == true,
       streak: state.streak,
+      dodgeDirection: _selectedDodgeDirection(),
     );
     final armSwing = state.phase == RunnerPhase.running
         ? math.sin(state.runnerProgress * math.pi * 12) * 8
         : 0.0;
     final runnerCenter = motion.runnerCenter;
     final palette = _characterPalette(contentPack.runner.portraitAssetId);
+    _drawRunnerDodgeTrail(canvas, motion, scale);
     _drawRunnerBoost(canvas, motion, scale);
     if (runnerImage case final image?) {
       _drawRunnerImage(canvas, motion, image);
@@ -663,6 +665,34 @@ class RunnerPainter extends CustomPainter {
     }
   }
 
+  void _drawRunnerDodgeTrail(Canvas canvas, RunnerMotion motion, double scale) {
+    if (motion.dodgeTrailRect.isEmpty) {
+      return;
+    }
+    final trailPaint = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.centerLeft,
+        end: Alignment.centerRight,
+        colors: [
+          contentPack.theme.secondaryColor.withValues(alpha: 0.04),
+          contentPack.theme.secondaryColor.withValues(alpha: 0.2),
+          Colors.white.withValues(alpha: 0.26),
+        ],
+      ).createShader(motion.dodgeTrailRect)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
+    canvas.drawOval(motion.dodgeTrailRect, trailPaint);
+
+    final tickPaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.5)
+      ..strokeWidth = 2 * scale
+      ..strokeCap = StrokeCap.round;
+    canvas.drawLine(
+      motion.dodgeTrailRect.centerLeft.translate(8 * scale, 0),
+      motion.dodgeTrailRect.center.translate(-4 * scale, -5 * scale),
+      tickPaint,
+    );
+  }
+
   void _drawFeedback(Canvas canvas, Size size, RunnerSelectionResult result) {
     final rect = RRect.fromRectAndRadius(
       Rect.fromLTWH(24, size.height * 0.2, size.width - 48, 98),
@@ -728,6 +758,21 @@ class RunnerPainter extends CustomPainter {
       return math.min(size.width, 336);
     }
     return size.width;
+  }
+
+  double _selectedDodgeDirection() {
+    final selectedAnswerId = state.lastResult?.selectedAnswerId;
+    if (state.phase != RunnerPhase.feedback || selectedAnswerId == null) {
+      return 0;
+    }
+    final answers = currentPrompt.answers.take(2).toList();
+    final selectedIndex =
+        answers.indexWhere((answer) => answer.id == selectedAnswerId);
+    return switch (selectedIndex) {
+      0 => -1,
+      1 => 1,
+      _ => 0,
+    };
   }
 
   void _drawStar(Canvas canvas, Offset center, double radius, Paint paint) {

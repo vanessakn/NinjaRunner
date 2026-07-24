@@ -9,6 +9,7 @@ class RunnerMotion {
     required this.spriteRect,
     required this.shadowRect,
     required this.boostTrailRect,
+    required this.dodgeTrailRect,
     required this.leanRadians,
     required this.shoeLift,
     required this.celebrationBursts,
@@ -19,6 +20,7 @@ class RunnerMotion {
   final Rect spriteRect;
   final Rect shadowRect;
   final Rect boostTrailRect;
+  final Rect dodgeTrailRect;
   final double leanRadians;
   final double shoeLift;
   final List<Offset> celebrationBursts;
@@ -29,6 +31,7 @@ class RunnerMotion {
     required bool isRunning,
     required bool hasPositiveFeedback,
     required int streak,
+    double dodgeDirection = 0,
   }) {
     final clampedProgress = progress.clamp(0, 1).toDouble();
     final playWidth =
@@ -37,13 +40,15 @@ class RunnerMotion {
     final phase = math.sin(clampedProgress * math.pi * 12);
     final bounce = isRunning ? phase * 5.5 * scale : 0.0;
     final shoeLift = isRunning ? phase.abs() * 7 * scale : 0.0;
-    final leanRadians = isRunning ? phase * 0.04 : 0.0;
+    final clampedDodge = dodgeDirection.clamp(-1, 1).toDouble();
+    final dodgeDistance = clampedDodge * playWidth * 0.16 * scale;
+    final leanRadians = (isRunning ? phase * 0.04 : 0.0) + clampedDodge * 0.11;
 
     final groundY =
         _lerp(size.height * 0.86, size.height * 0.61, clampedProgress);
     final spriteWidth = 128 * scale;
     final spriteHeight = 168 * scale;
-    final groundAnchor = Offset(playWidth * 0.5, groundY);
+    final groundAnchor = Offset(playWidth * 0.5 + dodgeDistance, groundY);
     final runnerCenter =
         groundAnchor.translate(0, -spriteHeight * 0.5 + bounce);
     final spriteRect = Rect.fromCenter(
@@ -61,6 +66,12 @@ class RunnerMotion {
       width: hasPositiveFeedback ? spriteWidth + (28 + streak * 8) * scale : 0,
       height: hasPositiveFeedback ? 48 * scale : 0,
     );
+    final dodgeTrailRect = Rect.fromCenter(
+      center:
+          runnerCenter.translate(clampedDodge * 42 * scale, spriteHeight * 0.2),
+      width: clampedDodge == 0 ? 0 : 70 * scale,
+      height: clampedDodge == 0 ? 0 : 26 * scale,
+    );
 
     final celebrationBursts = hasPositiveFeedback
         ? [
@@ -77,6 +88,7 @@ class RunnerMotion {
       spriteRect: spriteRect,
       shadowRect: shadowRect,
       boostTrailRect: boostTrailRect,
+      dodgeTrailRect: dodgeTrailRect,
       leanRadians: leanRadians,
       shoeLift: shoeLift,
       celebrationBursts: celebrationBursts,

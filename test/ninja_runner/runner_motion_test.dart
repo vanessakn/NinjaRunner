@@ -50,4 +50,51 @@ void main() {
     expect(motion.celebrationBursts, hasLength(4));
     expect(motion.boostTrailRect.width, greaterThan(motion.spriteRect.width));
   });
+
+  test('selected left gate dodges the runner toward the left lane', () {
+    final centered = RunnerMotion.calculate(
+      size: const Size(390, 720),
+      progress: 0.72,
+      isRunning: false,
+      hasPositiveFeedback: false,
+      streak: 0,
+      dodgeDirection: 0,
+    );
+    final leftDodge = RunnerMotion.calculate(
+      size: const Size(390, 720),
+      progress: 0.72,
+      isRunning: false,
+      hasPositiveFeedback: false,
+      streak: 0,
+      dodgeDirection: -1,
+    );
+
+    expect(leftDodge.runnerCenter.dx, lessThan(centered.runnerCenter.dx));
+    expect(leftDodge.leanRadians, lessThan(centered.leanRadians));
+    expect(leftDodge.dodgeTrailRect.right, lessThan(centered.runnerCenter.dx));
+  });
+
+  test('selected right gate dodges the runner toward the right lane', () {
+    final centered = RunnerMotion.calculate(
+      size: const Size(390, 720),
+      progress: 0.72,
+      isRunning: false,
+      hasPositiveFeedback: false,
+      streak: 0,
+      dodgeDirection: 0,
+    );
+    final rightDodge = RunnerMotion.calculate(
+      size: const Size(390, 720),
+      progress: 0.72,
+      isRunning: false,
+      hasPositiveFeedback: false,
+      streak: 0,
+      dodgeDirection: 1,
+    );
+
+    expect(rightDodge.runnerCenter.dx, greaterThan(centered.runnerCenter.dx));
+    expect(rightDodge.leanRadians, greaterThan(centered.leanRadians));
+    expect(
+        rightDodge.dodgeTrailRect.left, greaterThan(centered.runnerCenter.dx));
+  });
 }
