@@ -38,6 +38,26 @@ void main() {
     expect(find.text('Start Run'), findsOneWidget);
   });
 
+  testWidgets('game picker scrolls on compact heights', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(390, 320));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(const KidNationMobileGamesApp());
+
+    expect(find.text('KidNation Games'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+
+    await tester.drag(find.byType(Scrollable), const Offset(0, -220));
+    await tester.pump();
+    await tester.tap(find.text('Ninja Go'));
+    await tester.binding.setSurfaceSize(null);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.text('KidNation Ninja Go'), findsOneWidget);
+    expect(find.text('Start Run'), findsOneWidget);
+  });
+
   testWidgets('opens Bubble Blast from the game picker', (tester) async {
     await tester.pumpWidget(const KidNationMobileGamesApp());
 

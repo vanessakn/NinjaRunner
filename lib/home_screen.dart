@@ -12,47 +12,50 @@ class HomeScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFFF7F1DF),
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const SizedBox(height: 12),
-              Text(
-                'KidNation Games',
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.w900,
-                    ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Choose a quick KidNation game.',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-              ),
-              const SizedBox(height: 24),
-              _GameButton(
-                title: 'Ninja Runner',
-                subtitle: 'Run through the right answer gate.',
-                color: const Color(0xFF00A7E1),
-                onPressed: () => _open(context, const NinjaRunnerScreen()),
-              ),
-              const SizedBox(height: 12),
-              _GameButton(
-                title: 'Ninja Go',
-                subtitle: 'Dodge obstacles in a three-lane reflex run.',
-                color: const Color(0xFF16A34A),
-                onPressed: () => _open(context, const NinjaGoScreen()),
-              ),
-              const SizedBox(height: 12),
-              _GameButton(
-                title: 'Bubble Blast',
-                subtitle: 'Pop the bubble that matches the prompt.',
-                color: const Color(0xFFFF7A59),
-                onPressed: () => _open(context, const BubbleBlastScreen()),
-              ),
-            ],
+          child: SizedBox(
+            width: double.infinity,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SizedBox(height: 12),
+                Text(
+                  'KidNation Games',
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                        fontWeight: FontWeight.w900,
+                      ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Choose a quick KidNation game.',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                ),
+                const SizedBox(height: 24),
+                _GameButton(
+                  title: 'Ninja Runner',
+                  subtitle: 'Run through the right answer gate.',
+                  color: const Color(0xFF00A7E1),
+                  onPressed: () => _open(context, const NinjaRunnerScreen()),
+                ),
+                const SizedBox(height: 12),
+                _GameButton(
+                  title: 'Ninja Go',
+                  subtitle: 'Dodge obstacles in a three-lane reflex run.',
+                  color: const Color(0xFF16A34A),
+                  onPressed: () => _open(context, const NinjaGoScreen()),
+                ),
+                const SizedBox(height: 12),
+                _GameButton(
+                  title: 'Bubble Blast',
+                  subtitle: 'Pop the bubble that matches the prompt.',
+                  color: const Color(0xFFFF7A59),
+                  onPressed: () => _open(context, const BubbleBlastScreen()),
+                ),
+              ],
+            ),
           ),
         ),
       ),
