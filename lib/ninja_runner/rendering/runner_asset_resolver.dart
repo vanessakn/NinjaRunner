@@ -1,6 +1,10 @@
 class RunnerAssetResolver {
   const RunnerAssetResolver._();
 
+  static const kidNationBackgroundPath =
+      'assets/brand/kidnation_background_screen.png';
+  static const kidNationLogoPath = 'assets/brand/kidnation_logo_white.png';
+
   static String? characterPath(String? portraitAssetId) {
     return switch (portraitAssetId) {
       'character-jordan-placeholder' => 'assets/characters/jordan-runner.png',

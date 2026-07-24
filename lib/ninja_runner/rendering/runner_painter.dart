@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../game/runner_controller.dart';
 import '../models/content_pack.dart';
+import 'kidnation_visual_theme.dart';
 import 'runner_motion.dart';
 
 class RunnerPainter extends CustomPainter {
@@ -14,6 +15,8 @@ class RunnerPainter extends CustomPainter {
     required this.currentPrompt,
     this.runnerImage,
     this.backgroundImage,
+    this.brandBackgroundImage,
+    this.brandLogoImage,
     this.visualRunCycleProgress = 0,
   });
 
@@ -22,6 +25,8 @@ class RunnerPainter extends CustomPainter {
   final RunnerPrompt currentPrompt;
   final ui.Image? runnerImage;
   final ui.Image? backgroundImage;
+  final ui.Image? brandBackgroundImage;
+  final ui.Image? brandLogoImage;
   final double visualRunCycleProgress;
 
   @override
@@ -39,63 +44,133 @@ class RunnerPainter extends CustomPainter {
   }
 
   void _drawBackdrop(Canvas canvas, Size size) {
-    final skyPaint = Paint()
-      ..shader = const LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [
-          Color(0xFF80D8FF),
-          Color(0xFFE9F8FF),
-        ],
-      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height * 0.58));
+    final fullRect = Offset.zero & size;
+    if (brandBackgroundImage case final image?) {
+      _drawCoverImage(canvas, image, fullRect, FilterQuality.medium);
+    } else {
+      canvas.drawRect(
+        fullRect,
+        Paint()
+          ..shader = const LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              KidNationVisualTheme.backgroundTop,
+              KidNationVisualTheme.backgroundBottom,
+            ],
+          ).createShader(fullRect),
+      );
+    }
+
     canvas.drawRect(
-      Rect.fromLTWH(0, 0, size.width, size.height * 0.58),
-      skyPaint,
+      fullRect,
+      Paint()
+        ..color = KidNationVisualTheme.backgroundBottom.withValues(alpha: 0.24),
     );
-
-    final sunPaint = Paint()..color = contentPack.theme.secondaryColor;
     canvas.drawCircle(
-      Offset(size.width * 0.82, size.height * 0.16),
-      math.min(42, size.shortestSide * 0.1),
-      sunPaint,
+      Offset(size.width * 0.82, size.height * 0.18),
+      math.min(72, size.shortestSide * 0.18),
+      Paint()
+        ..color = KidNationVisualTheme.yellow.withValues(alpha: 0.22)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 18),
+    );
+    canvas.drawCircle(
+      Offset(size.width * 0.18, size.height * 0.24),
+      math.min(54, size.shortestSide * 0.14),
+      Paint()
+        ..color = KidNationVisualTheme.secondary.withValues(alpha: 0.2)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 18),
     );
 
-    final farHillPaint = Paint()
-      ..color = contentPack.theme.primaryColor.withValues(alpha: 0.22);
-    final nearHillPaint = Paint()
-      ..color = contentPack.theme.primaryColor.withValues(alpha: 0.38);
-    final hillTop = size.height * 0.42;
-    canvas.drawOval(
-      Rect.fromLTWH(-size.width * 0.16, hillTop, size.width * 0.74, 92),
-      farHillPaint,
+    final playWidth = _playWidth(size);
+    final stageRect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(10, 44, playWidth - 20, size.height - 58),
+      const Radius.circular(26),
     );
-    canvas.drawOval(
-      Rect.fromLTWH(size.width * 0.42, hillTop - 18, size.width * 0.78, 118),
-      nearHillPaint,
+    canvas.drawRRect(
+      stageRect,
+      Paint()
+        ..color = Colors.white.withValues(alpha: 0.08)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2),
     );
+    canvas.drawRRect(
+      stageRect,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2
+        ..color = Colors.white.withValues(alpha: 0.2),
+    );
+
     if (backgroundImage case final image?) {
-      _drawBackgroundImage(canvas, size, image);
+      final themeRect = Rect.fromLTWH(
+        20,
+        size.height * 0.17,
+        playWidth - 40,
+        size.height * 0.24,
+      );
+      canvas.saveLayer(themeRect, Paint());
+      _drawCoverImage(canvas, image, themeRect, FilterQuality.medium);
+      canvas.drawRect(
+        themeRect,
+        Paint()
+          ..color = KidNationVisualTheme.backgroundTop.withValues(alpha: 0.56),
+      );
+      canvas.restore();
     } else {
       _drawThemePlaceholder(canvas, size);
     }
+
+    _drawBrandLogo(canvas, size);
   }
 
-  void _drawBackgroundImage(Canvas canvas, Size size, ui.Image image) {
+  void _drawCoverImage(
+    Canvas canvas,
+    ui.Image image,
+    Rect target,
+    FilterQuality filterQuality,
+  ) {
     final imageSize = Size(image.width.toDouble(), image.height.toDouble());
-    final target = Rect.fromLTWH(0, 0, size.width, size.height * 0.58);
     final fitted = applyBoxFit(BoxFit.cover, imageSize, target.size);
-    final source =
-        Alignment.center.inscribe(fitted.source, Offset.zero & imageSize);
+    final source = Alignment.center.inscribe(
+      fitted.source,
+      Offset.zero & imageSize,
+    );
     final destination = Alignment.center.inscribe(fitted.destination, target);
     canvas.drawImageRect(
       image,
       source,
       destination,
-      Paint()..filterQuality = FilterQuality.medium,
+      Paint()..filterQuality = filterQuality,
     );
-    canvas.drawRect(
-      target,
-      Paint()..color = Colors.white.withValues(alpha: 0.18),
+  }
+
+  void _drawBrandLogo(Canvas canvas, Size size) {
+    if (brandLogoImage case final logo?) {
+      final logoWidth = math.min(54.0, size.width * 0.14);
+      final imageSize = Size(logo.width.toDouble(), logo.height.toDouble());
+      final target = Rect.fromLTWH(
+        size.width - logoWidth - 16,
+        10,
+        logoWidth,
+        logoWidth * imageSize.height / imageSize.width,
+      );
+      canvas.drawImageRect(
+        logo,
+        Offset.zero & imageSize,
+        target,
+        Paint()..filterQuality = FilterQuality.high,
+      );
+      return;
+    }
+    _drawText(
+      canvas,
+      'KN',
+      Offset(size.width - 38, 28),
+      maxWidth: 42,
+      fontSize: 18,
+      fontWeight: FontWeight.w900,
+      color: Colors.white,
+      textAlign: TextAlign.center,
     );
   }
 
@@ -195,68 +270,84 @@ class RunnerPainter extends CustomPainter {
 
   void _drawLane(Canvas canvas, Size size) {
     final playWidth = _playWidth(size);
-    final horizonY = size.height * 0.36;
+    final horizonY = size.height * 0.39;
+    final groundRect = Rect.fromLTWH(0, horizonY, size.width, size.height);
     final groundPaint = Paint()
-      ..shader = LinearGradient(
+      ..shader = const LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
         colors: [
-          contentPack.theme.primaryColor.withValues(alpha: 0.88),
-          const Color(0xFF11513A),
+          KidNationVisualTheme.stagePurple,
+          KidNationVisualTheme.navPurple,
         ],
-      ).createShader(Rect.fromLTWH(0, horizonY, size.width, size.height));
+      ).createShader(groundRect);
     canvas.drawRect(
       Rect.fromLTWH(0, horizonY, size.width, size.height - horizonY),
       groundPaint,
     );
 
+    final glowPath = Path()
+      ..moveTo(playWidth * 0.02, size.height)
+      ..lineTo(playWidth * 0.38, horizonY - 8)
+      ..lineTo(playWidth * 0.62, horizonY - 8)
+      ..lineTo(playWidth * 0.98, size.height)
+      ..close();
+    canvas.drawPath(
+      glowPath,
+      Paint()
+        ..color = KidNationVisualTheme.secondary.withValues(alpha: 0.2)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 18),
+    );
+
     final lanePath = Path()
-      ..moveTo(playWidth * 0.12, size.height)
-      ..lineTo(playWidth * 0.34, horizonY)
-      ..lineTo(playWidth * 0.66, horizonY)
-      ..lineTo(playWidth * 0.88, size.height)
+      ..moveTo(playWidth * 0.1, size.height)
+      ..lineTo(playWidth * 0.36, horizonY)
+      ..lineTo(playWidth * 0.64, horizonY)
+      ..lineTo(playWidth * 0.9, size.height)
       ..close();
     canvas.drawPath(
       lanePath,
-      Paint()..color = const Color(0xFF263238).withValues(alpha: 0.34),
+      Paint()
+        ..shader = const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [KidNationVisualTheme.cream, KidNationVisualTheme.gold],
+        ).createShader(groundRect),
     );
     canvas.drawPath(
       lanePath,
       Paint()
-        ..shader = LinearGradient(
+        ..shader = const LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [
-            Colors.white.withValues(alpha: 0.08),
-            contentPack.theme.secondaryColor.withValues(alpha: 0.1),
-          ],
-        ).createShader(Rect.fromLTWH(0, horizonY, size.width, size.height)),
+          colors: [Color(0x00FFFFFF), Color(0x44D13493)],
+        ).createShader(groundRect),
     );
 
     final laneBorderPaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.78)
+      ..color = Colors.white.withValues(alpha: 0.9)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 4;
+      ..strokeWidth = 5;
     canvas.drawLine(
-      Offset(playWidth * 0.12, size.height),
-      Offset(playWidth * 0.34, horizonY),
+      Offset(playWidth * 0.1, size.height),
+      Offset(playWidth * 0.36, horizonY),
       laneBorderPaint,
     );
     canvas.drawLine(
-      Offset(playWidth * 0.88, size.height),
-      Offset(playWidth * 0.66, horizonY),
+      Offset(playWidth * 0.9, size.height),
+      Offset(playWidth * 0.64, horizonY),
       laneBorderPaint,
     );
 
     final dashPaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.5)
+      ..color = KidNationVisualTheme.primary.withValues(alpha: 0.34)
       ..strokeWidth = 3
       ..strokeCap = StrokeCap.round;
     for (var i = 0; i < 6; i++) {
       final t = ((i / 6) + state.runnerProgress * 0.8) % 1;
       final y = horizonY + (size.height - horizonY) * math.pow(t, 1.55);
-      final leftX = _lerp(playWidth * 0.34, playWidth * 0.12, t);
-      final rightX = _lerp(playWidth * 0.66, playWidth * 0.88, t);
+      final leftX = _lerp(playWidth * 0.36, playWidth * 0.1, t);
+      final rightX = _lerp(playWidth * 0.64, playWidth * 0.9, t);
       final centerX = (leftX + rightX) / 2;
       final halfWidth = (rightX - leftX) * 0.18;
       canvas.drawLine(
@@ -269,7 +360,7 @@ class RunnerPainter extends CustomPainter {
 
   void _drawPickups(Canvas canvas, Size size) {
     final playWidth = _playWidth(size);
-    final pickupPaint = Paint()..color = const Color(0xFFFFD23F);
+    final pickupPaint = Paint()..color = KidNationVisualTheme.gold;
     final sparklePaint = Paint()
       ..color = Colors.white.withValues(alpha: 0.82)
       ..strokeWidth = 2
@@ -307,14 +398,22 @@ class RunnerPainter extends CustomPainter {
     _drawSoftShadow(canvas, rect.outerRect, blur: 12);
     canvas.drawRRect(
       rect,
-      Paint()..color = Colors.white.withValues(alpha: 0.96),
+      Paint()
+        ..shader = const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            KidNationVisualTheme.secondary,
+            KidNationVisualTheme.primary,
+          ],
+        ).createShader(rect.outerRect),
     );
     canvas.drawRRect(
       rect,
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2
-        ..color = const Color(0xFF151515).withValues(alpha: 0.08),
+        ..color = Colors.white.withValues(alpha: 0.3),
     );
     _drawText(
       canvas,
@@ -323,6 +422,7 @@ class RunnerPainter extends CustomPainter {
       maxWidth: playWidth - 76,
       fontSize: 20 * scale,
       fontWeight: FontWeight.w800,
+      color: Colors.white,
       textAlign: TextAlign.center,
     );
   }
@@ -335,7 +435,14 @@ class RunnerPainter extends CustomPainter {
     _drawSoftShadow(canvas, rect.outerRect, blur: 8);
     canvas.drawRRect(
       rect,
-      Paint()..color = Colors.white.withValues(alpha: 0.92),
+      Paint()..color = KidNationVisualTheme.yellow.withValues(alpha: 0.96),
+    );
+    canvas.drawRRect(
+      rect,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2
+        ..color = Colors.white.withValues(alpha: 0.48),
     );
     _drawText(
       canvas,
@@ -344,6 +451,7 @@ class RunnerPainter extends CustomPainter {
       maxWidth: 92,
       fontSize: 14,
       fontWeight: FontWeight.w800,
+      color: KidNationVisualTheme.deepPurple,
       textAlign: TextAlign.center,
     );
   }
@@ -375,15 +483,18 @@ class RunnerPainter extends CustomPainter {
         Paint()
           ..style = PaintingStyle.stroke
           ..strokeWidth = 6
-          ..color = contentPack.theme.secondaryColor.withValues(alpha: 0.34),
+          ..color = (i == 0
+                  ? KidNationVisualTheme.yellow
+                  : KidNationVisualTheme.secondary)
+              .withValues(alpha: 0.5),
       );
       final color = isFeedback && isCorrect
-          ? const Color(0xFFFFD23F)
+          ? KidNationVisualTheme.gold
           : isFeedback && isSelected
               ? const Color(0xFFFFB4A8)
               : i == 0
-                  ? const Color(0xFFFFFFFF).withValues(alpha: 0.94)
-                  : const Color(0xFFF4FAFF).withValues(alpha: 0.94);
+                  ? KidNationVisualTheme.cream
+                  : KidNationVisualTheme.palePurple;
       if (isFeedback && (isCorrect || isSelected)) {
         canvas.drawRRect(
           rect.inflate(isCorrect ? 9 : 5),
@@ -408,7 +519,7 @@ class RunnerPainter extends CustomPainter {
           ..color = isFeedback && isCorrect
               ? const Color(0xFF13794A)
               : isSelected
-                  ? const Color(0xFF151515)
+                  ? KidNationVisualTheme.primary
                   : Colors.white.withValues(alpha: 0.96),
       );
       canvas.drawLine(
@@ -419,6 +530,21 @@ class RunnerPainter extends CustomPainter {
           ..strokeWidth = 2,
       );
       _drawGateWarningStripe(canvas, rect, i);
+      canvas.drawCircle(
+        Offset(centers[i], rect.top + 47 * scale),
+        13 * scale,
+        Paint()..color = KidNationVisualTheme.yellow.withValues(alpha: 0.9),
+      );
+      _drawText(
+        canvas,
+        i == 0 ? 'L' : 'R',
+        Offset(centers[i], rect.top + 47 * scale),
+        maxWidth: 22,
+        fontSize: 14 * scale,
+        fontWeight: FontWeight.w900,
+        color: KidNationVisualTheme.deepPurple,
+        textAlign: TextAlign.center,
+      );
       _drawText(
         canvas,
         i == 0 ? 'LEFT' : 'RIGHT',
@@ -436,6 +562,7 @@ class RunnerPainter extends CustomPainter {
         maxWidth: gateWidth - 18,
         fontSize: 24 * scale,
         fontWeight: FontWeight.w900,
+        color: KidNationVisualTheme.deepPurple,
         textAlign: TextAlign.center,
       );
     }
@@ -459,17 +586,12 @@ class RunnerPainter extends CustomPainter {
   void _drawProgressCue(Canvas canvas, Size size) {
     final playWidth = _playWidth(size);
     final track = RRect.fromRectAndRadius(
-      Rect.fromLTWH(
-        playWidth * 0.91,
-        size.height * 0.36,
-        8,
-        size.height * 0.5,
-      ),
+      Rect.fromLTWH(playWidth * 0.91, size.height * 0.36, 8, size.height * 0.5),
       const Radius.circular(8),
     );
     canvas.drawRRect(
       track,
-      Paint()..color = Colors.white.withValues(alpha: 0.35),
+      Paint()..color = Colors.white.withValues(alpha: 0.24),
     );
     canvas.drawRRect(
       RRect.fromRectAndRadius(
@@ -481,7 +603,7 @@ class RunnerPainter extends CustomPainter {
         ),
         const Radius.circular(8),
       ),
-      Paint()..color = contentPack.theme.secondaryColor,
+      Paint()..color = KidNationVisualTheme.yellow,
     );
     if (state.streak > 0) {
       _drawText(
@@ -517,9 +639,9 @@ class RunnerPainter extends CustomPainter {
     final isRunnerInMotion =
         state.phase == RunnerPhase.running || dodgeDirection != 0;
     final armSwing = isRunnerInMotion
-        ? math.sin((state.runnerProgress + visualRunCycleProgress) *
-                math.pi *
-                12) *
+        ? math.sin(
+              (state.runnerProgress + visualRunCycleProgress) * math.pi * 12,
+            ) *
             8
         : 0.0;
     final runnerCenter = motion.runnerCenter;
@@ -554,7 +676,10 @@ class RunnerPainter extends CustomPainter {
 
     final headCenter = Offset(runnerCenter.dx, runnerCenter.dy - 52 * scale);
     canvas.drawCircle(
-        headCenter, 25 * scale, Paint()..color = palette.skinColor);
+      headCenter,
+      25 * scale,
+      Paint()..color = palette.skinColor,
+    );
     canvas.drawCircle(headCenter, 25 * scale, outlinePaint);
     canvas.drawArc(
       Rect.fromCenter(
@@ -638,22 +763,25 @@ class RunnerPainter extends CustomPainter {
     );
   }
 
-  void _drawRunnerImage(
-    Canvas canvas,
-    RunnerMotion motion,
-    ui.Image image,
-  ) {
+  void _drawRunnerImage(Canvas canvas, RunnerMotion motion, ui.Image image) {
     canvas.drawOval(
       motion.shadowRect,
       Paint()..color = const Color(0xFF151515).withValues(alpha: 0.18),
     );
     final imageSize = Size(image.width.toDouble(), image.height.toDouble());
-    final fitted =
-        applyBoxFit(BoxFit.contain, imageSize, motion.spriteRect.size);
-    final source =
-        Alignment.center.inscribe(fitted.source, Offset.zero & imageSize);
-    final destination = Alignment.center.inscribe(fitted.destination,
-        Rect.fromLTWH(0, 0, motion.spriteRect.width, motion.spriteRect.height));
+    final fitted = applyBoxFit(
+      BoxFit.contain,
+      imageSize,
+      motion.spriteRect.size,
+    );
+    final source = Alignment.center.inscribe(
+      fitted.source,
+      Offset.zero & imageSize,
+    );
+    final destination = Alignment.center.inscribe(
+      fitted.destination,
+      Rect.fromLTWH(0, 0, motion.spriteRect.width, motion.spriteRect.height),
+    );
     canvas.save();
     canvas.translate(motion.spriteRect.center.dx, motion.spriteRect.center.dy);
     canvas.rotate(motion.leanRadians);
@@ -735,11 +863,7 @@ class RunnerPainter extends CustomPainter {
     _drawRunnerImageSlice(
       canvas,
       image,
-      _mapDestinationSliceToSource(
-        upperDestination,
-        destination,
-        source,
-      ),
+      _mapDestinationSliceToSource(upperDestination, destination, source),
       upperDestination,
       paint,
     );
@@ -882,11 +1006,7 @@ class RunnerPainter extends CustomPainter {
     );
   }
 
-  void _drawSoftShadow(
-    Canvas canvas,
-    Rect rect, {
-    required double blur,
-  }) {
+  void _drawSoftShadow(Canvas canvas, Rect rect, {required double blur}) {
     canvas.drawRRect(
       RRect.fromRectAndRadius(
         rect.shift(const Offset(0, 5)),
@@ -919,8 +1039,9 @@ class RunnerPainter extends CustomPainter {
       return 0;
     }
     final answers = currentPrompt.answers.take(2).toList();
-    final selectedIndex =
-        answers.indexWhere((answer) => answer.id == selectedAnswerId);
+    final selectedIndex = answers.indexWhere(
+      (answer) => answer.id == selectedAnswerId,
+    );
     return switch (selectedIndex) {
       0 => -1,
       1 => 1,
@@ -1010,6 +1131,8 @@ class RunnerPainter extends CustomPainter {
         oldDelegate.contentPack != contentPack ||
         oldDelegate.runnerImage != runnerImage ||
         oldDelegate.backgroundImage != backgroundImage ||
+        oldDelegate.brandBackgroundImage != brandBackgroundImage ||
+        oldDelegate.brandLogoImage != brandLogoImage ||
         oldDelegate.visualRunCycleProgress != visualRunCycleProgress;
   }
 }

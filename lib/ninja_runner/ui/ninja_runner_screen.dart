@@ -8,6 +8,7 @@ import '../data/sample_content_pack.dart';
 import '../game/level_progress_store.dart';
 import '../game/runner_controller.dart';
 import '../models/ninja_runner_level.dart';
+import '../rendering/kidnation_visual_theme.dart';
 import '../rendering/runner_asset_resolver.dart';
 import '../rendering/runner_painter.dart';
 
@@ -33,6 +34,7 @@ class _NinjaRunnerScreenState extends State<NinjaRunnerScreen>
   late final LevelProgressStore _progressStore;
   late final RunnerFeedbackEffects _feedbackEffects;
   _LoadedRunnerAssets _loadedAssets = const _LoadedRunnerAssets();
+  _LoadedBrandAssets _brandAssets = const _LoadedBrandAssets();
   var _selectedLevelIndex = 0;
   var _highestUnlockedLevelIndex = 0;
   var _bestScoresByLevelId = <String, int>{};
@@ -50,6 +52,7 @@ class _NinjaRunnerScreenState extends State<NinjaRunnerScreen>
     _controller = _createController(_levels[_selectedLevelIndex]);
     _ticker = createTicker(_handleTick);
     _restoreProgress();
+    _loadBrandAssets();
     _loadVisualAssetsForCurrentLevel();
   }
 
@@ -92,7 +95,7 @@ class _NinjaRunnerScreenState extends State<NinjaRunnerScreen>
   Widget build(BuildContext context) {
     final state = _controller.state;
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F1DF),
+      backgroundColor: KidNationVisualTheme.backgroundBottom,
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -105,10 +108,8 @@ class _NinjaRunnerScreenState extends State<NinjaRunnerScreen>
                 Expanded(
                   child: GestureDetector(
                     behavior: HitTestBehavior.opaque,
-                    onTapUp: (details) => _handleTap(
-                      details.localPosition,
-                      constraints.maxWidth,
-                    ),
+                    onTapUp: (details) =>
+                        _handleTap(details.localPosition, constraints.maxWidth),
                     onHorizontalDragEnd: (details) {
                       final velocity = details.primaryVelocity ?? 0;
                       if (velocity < 0) {
@@ -125,6 +126,8 @@ class _NinjaRunnerScreenState extends State<NinjaRunnerScreen>
                         currentPrompt: _controller.currentPrompt,
                         runnerImage: _loadedAssets.runnerImage,
                         backgroundImage: _loadedAssets.backgroundImage,
+                        brandBackgroundImage: _brandAssets.backgroundImage,
+                        brandLogoImage: _brandAssets.logoImage,
                         visualRunCycleProgress: _feedbackRunCycleProgress,
                       ),
                       child: const SizedBox.expand(),
@@ -282,19 +285,13 @@ class _NinjaRunnerScreenState extends State<NinjaRunnerScreen>
       return;
     }
     setState(() {
-      _bestScoresByLevelId = {
-        ..._bestScoresByLevelId,
-        levelId: score,
-      };
+      _bestScoresByLevelId = {..._bestScoresByLevelId, levelId: score};
     });
     _progressStore.saveBestScore(levelId: levelId, score: score);
   }
 
   RunnerController _createController(NinjaRunnerLevel level) {
-    return RunnerController(
-      level: level,
-      analyticsLogger: AnalyticsLogger(),
-    );
+    return RunnerController(level: level, analyticsLogger: AnalyticsLogger());
   }
 
   Future<void> _loadVisualAssetsForCurrentLevel() async {
@@ -318,6 +315,24 @@ class _NinjaRunnerScreenState extends State<NinjaRunnerScreen>
     });
   }
 
+  Future<void> _loadBrandAssets() async {
+    final backgroundImage = await _loadOptionalImage(
+      RunnerAssetResolver.kidNationBackgroundPath,
+    );
+    final logoImage = await _loadOptionalImage(
+      RunnerAssetResolver.kidNationLogoPath,
+    );
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _brandAssets = _LoadedBrandAssets(
+        backgroundImage: backgroundImage,
+        logoImage: logoImage,
+      );
+    });
+  }
+
   Future<ui.Image?> _loadOptionalImage(String? assetPath) async {
     if (assetPath == null) {
       return null;
@@ -334,13 +349,17 @@ class _NinjaRunnerScreenState extends State<NinjaRunnerScreen>
 }
 
 class _LoadedRunnerAssets {
-  const _LoadedRunnerAssets({
-    this.runnerImage,
-    this.backgroundImage,
-  });
+  const _LoadedRunnerAssets({this.runnerImage, this.backgroundImage});
 
   final ui.Image? runnerImage;
   final ui.Image? backgroundImage;
+}
+
+class _LoadedBrandAssets {
+  const _LoadedBrandAssets({this.backgroundImage, this.logoImage});
+
+  final ui.Image? backgroundImage;
+  final ui.Image? logoImage;
 }
 
 abstract class RunnerFeedbackEffects {
@@ -380,10 +399,7 @@ class PlatformRunnerFeedbackEffects implements RunnerFeedbackEffects {
 }
 
 class _Header extends StatelessWidget {
-  const _Header({
-    required this.controller,
-    required this.levelNumber,
-  });
+  const _Header({required this.controller, required this.levelNumber});
 
   final RunnerController controller;
   final int levelNumber;
@@ -401,9 +417,9 @@ class _Header extends StatelessWidget {
               children: [
                 Text(
                   'Ninja Runner',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w900,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
                 ),
                 const SizedBox(height: 2),
                 Wrap(
@@ -424,9 +440,9 @@ class _Header extends StatelessWidget {
                   'Help ${pack.runner.name} choose the kind gate.',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w800),
                 ),
                 Wrap(
                   spacing: 8,
@@ -442,9 +458,9 @@ class _Header extends StatelessWidget {
           ),
           Text(
             '${controller.state.score}/${pack.prompts.length}',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w900,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
           ),
         ],
       ),
@@ -494,10 +510,7 @@ class _Controls extends StatelessWidget {
                 onSelectLevel: onSelectLevel,
               ),
               const SizedBox(height: 10),
-              FilledButton(
-                onPressed: onStart,
-                child: const Text('Start Run'),
-              ),
+              FilledButton(onPressed: onStart, child: const Text('Start Run')),
             ],
           ),
         RunnerPhase.running => Column(
@@ -506,17 +519,17 @@ class _Controls extends StatelessWidget {
               Text(
                 'Choose a gate',
                 textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      fontWeight: FontWeight.w900,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w900),
               ),
               const SizedBox(height: 2),
               Text(
                 'Run up the lane',
                 textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w800),
               ),
               const SizedBox(height: 2),
               Text(
@@ -528,9 +541,9 @@ class _Controls extends StatelessWidget {
               Text(
                 'Streak ${state.streak}',
                 textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      fontWeight: FontWeight.w900,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w900),
               ),
               const SizedBox(height: 8),
               Row(
@@ -562,17 +575,17 @@ class _Controls extends StatelessWidget {
                     ? 'Streak Boost!'
                     : 'Slow down and try again',
                 textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      fontWeight: FontWeight.w900,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w900),
               ),
               const SizedBox(height: 4),
               Text(
                 _feedbackDetail(controller),
                 textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w800),
               ),
               const SizedBox(height: 4),
               Text(
@@ -593,9 +606,9 @@ class _Controls extends StatelessWidget {
               Text(
                 controller.roundResultTitle,
                 textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w900,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
               ),
               const SizedBox(height: 4),
               if (controller.roundResultTitle != 'Level Complete!' &&
@@ -603,9 +616,9 @@ class _Controls extends StatelessWidget {
                 Text(
                   'Level Complete!',
                   textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w800),
                 ),
               Text(
                 'Score: ${state.score}/${controller.contentPack.prompts.length} '
@@ -626,9 +639,7 @@ class _Controls extends StatelessWidget {
                 )
               else
                 FilledButton(
-                  onPressed: onStart,
-                  child: const Text('Play Again'),
-                ),
+                    onPressed: onStart, child: const Text('Play Again')),
             ],
           ),
         RunnerPhase.error => const Text('The run needs a quick reset.'),
@@ -671,8 +682,9 @@ class _LevelChoices extends StatelessWidget {
         children: [
           for (var index = 0; index < levels.length; index++) ...[
             Padding(
-              padding:
-                  EdgeInsets.only(right: index == levels.length - 1 ? 0 : 8),
+              padding: EdgeInsets.only(
+                right: index == levels.length - 1 ? 0 : 8,
+              ),
               child: _LevelChoice(
                 level: levels[index],
                 isSelected: index == selectedLevelIndex,

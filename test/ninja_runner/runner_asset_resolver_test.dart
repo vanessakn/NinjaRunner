@@ -40,6 +40,17 @@ void main() {
     );
   });
 
+  test('exposes KidNation mobile brand scene assets', () {
+    expect(
+      RunnerAssetResolver.kidNationBackgroundPath,
+      'assets/brand/kidnation_background_screen.png',
+    );
+    expect(
+      RunnerAssetResolver.kidNationLogoPath,
+      'assets/brand/kidnation_logo_white.png',
+    );
+  });
+
   test('returns null for missing asset ids so painter fallback can render', () {
     expect(RunnerAssetResolver.characterPath(null), isNull);
     expect(RunnerAssetResolver.characterPath('unknown'), isNull);
