@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kidnation_mobile_games/bubble_blast/audio/spoken_prompt_reader.dart';
 import 'package:kidnation_mobile_games/bubble_blast/ui/bubble_blast_screen.dart';
 import 'package:kidnation_mobile_games/main.dart';
+import 'package:kidnation_mobile_games/ninja_go/ui/ninja_go_screen.dart';
 
 class FakeTextToSpeechEngine implements TextToSpeechEngine {
   final spokenTexts = <String>[];
@@ -113,5 +114,21 @@ void main() {
     await tester.pump(const Duration(milliseconds: 900));
 
     expect(find.text('joy'), findsOneWidget);
+  });
+
+  testWidgets(
+      'Ninja Go screen starts and shows game over after collision controls are available',
+      (tester) async {
+    await tester.pumpWidget(const MaterialApp(home: NinjaGoScreen()));
+
+    expect(find.text('KidNation Ninja Go'), findsOneWidget);
+    expect(find.text('Start Run'), findsOneWidget);
+
+    await tester.tap(find.text('Start Run'));
+    await tester.pump();
+
+    expect(find.text('Score'), findsOneWidget);
+    expect(find.text('Jump'), findsOneWidget);
+    expect(find.text('Slide'), findsOneWidget);
   });
 }
