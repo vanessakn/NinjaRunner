@@ -1,11 +1,11 @@
 {
-    "name": "Ninja Runner",
-    "short_name": "Ninja Runner",
+    "name": "kidnation_mobile_games",
+    "short_name": "kidnation_mobile_games",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#F7F1DF",
-    "theme_color": "#00A7E1",
-    "description": "Playable review build of KidNation Ninja Runner.",
+    "background_color": "#0175C2",
+    "theme_color": "#0175C2",
+    "description": "A new Flutter project.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
