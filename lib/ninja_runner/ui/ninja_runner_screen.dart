@@ -409,61 +409,142 @@ class _Header extends StatelessWidget {
     final pack = controller.contentPack;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Ninja Runner',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
-                ),
-                const SizedBox(height: 2),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 2,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              KidNationVisualTheme.secondary,
+              KidNationVisualTheme.primary
+            ],
+          ),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.22)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.18),
+              blurRadius: 14,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(14, 10, 12, 10),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Level $levelNumber'),
                     Text(
-                      'Runner Mode',
-                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                      'Ninja Runner',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            color: Colors.white,
                             fontWeight: FontWeight.w900,
                           ),
                     ),
-                    Text(pack.runner.name),
+                    const SizedBox(height: 3),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 4,
+                      children: [
+                        _HeaderBadge(text: 'Level $levelNumber'),
+                        const _HeaderBadge(text: 'Runner Mode'),
+                        _HeaderBadge(text: pack.runner.name),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Help ${pack.runner.name} choose the kind gate.',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w800,
+                          ),
+                    ),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 2,
+                      children: [
+                        _HeaderMeta(
+                            text:
+                                '${controller.level.name} - ${pack.theme.name}'),
+                        _HeaderMeta(
+                            text: '${pack.prompts.length} quick choices'),
+                        _HeaderMeta(text: pack.ageRangeLabel),
+                      ],
+                    ),
                   ],
                 ),
-                Text(
-                  'Help ${pack.runner.name} choose the kind gate.',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(width: 10),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                decoration: BoxDecoration(
+                  color: KidNationVisualTheme.yellow,
+                  borderRadius: BorderRadius.circular(14),
+                  border:
+                      Border.all(color: Colors.white.withValues(alpha: 0.5)),
                 ),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 2,
-                  children: [
-                    Text('${controller.level.name} - ${pack.theme.name}'),
-                    Text('${pack.prompts.length} quick choices'),
-                    Text(pack.ageRangeLabel),
-                  ],
+                child: Text(
+                  '${controller.state.score}/${pack.prompts.length}',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: KidNationVisualTheme.deepPurple,
+                        fontWeight: FontWeight.w900,
+                      ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-          Text(
-            '${controller.state.score}/${pack.prompts.length}',
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
-          ),
-        ],
+        ),
       ),
+    );
+  }
+}
+
+class _HeaderBadge extends StatelessWidget {
+  const _HeaderBadge({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.16),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        child: Text(
+          text,
+          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.w900,
+              ),
+        ),
+      ),
+    );
+  }
+}
+
+class _HeaderMeta extends StatelessWidget {
+  const _HeaderMeta({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text,
+      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+            color: Colors.white.withValues(alpha: 0.78),
+            fontWeight: FontWeight.w800,
+          ),
     );
   }
 }
@@ -496,154 +577,233 @@ class _Controls extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = controller.state;
+    final buttonStyle = FilledButton.styleFrom(
+      backgroundColor: KidNationVisualTheme.yellow,
+      foregroundColor: KidNationVisualTheme.deepPurple,
+      minimumSize: const Size.fromHeight(44),
+      textStyle: Theme.of(context).textTheme.labelLarge?.copyWith(
+            fontWeight: FontWeight.w900,
+          ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+    );
+    final secondaryButtonStyle = FilledButton.styleFrom(
+      backgroundColor: Colors.white.withValues(alpha: 0.94),
+      foregroundColor: KidNationVisualTheme.deepPurple,
+      minimumSize: const Size.fromHeight(44),
+      textStyle: Theme.of(context).textTheme.labelLarge?.copyWith(
+            fontWeight: FontWeight.w900,
+          ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+    );
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-      child: switch (state.phase) {
-        RunnerPhase.ready => Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _LevelChoices(
-                levels: levels,
-                selectedLevelIndex: selectedLevelIndex,
-                highestUnlockedLevelIndex: highestUnlockedLevelIndex,
-                bestScoresByLevelId: bestScoresByLevelId,
-                onSelectLevel: onSelectLevel,
-              ),
-              const SizedBox(height: 10),
-              FilledButton(onPressed: onStart, child: const Text('Start Run')),
-            ],
-          ),
-        RunnerPhase.running => Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                'Choose a gate',
-                textAlign: TextAlign.center,
-                style: Theme.of(
-                  context,
-                ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w900),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                'Run up the lane',
-                textAlign: TextAlign.center,
-                style: Theme.of(
-                  context,
-                ).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w800),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                'Collect stars by choosing kind gates',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.labelMedium,
-              ),
-              const SizedBox(height: 6),
-              Text(
-                'Streak ${state.streak}',
-                textAlign: TextAlign.center,
-                style: Theme.of(
-                  context,
-                ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w900),
-              ),
-              const SizedBox(height: 8),
-              Row(
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: KidNationVisualTheme.navPurple.withValues(alpha: 0.72),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.2),
+              blurRadius: 14,
+              offset: const Offset(0, -4),
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+          child: switch (state.phase) {
+            RunnerPhase.ready => Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Expanded(
-                    child: FilledButton.icon(
-                      onPressed: () => onAnswer(0),
-                      icon: const Icon(Icons.keyboard_arrow_left_rounded),
-                      label: Text(controller.currentPrompt.answers[0].label),
-                    ),
+                  _LevelChoices(
+                    levels: levels,
+                    selectedLevelIndex: selectedLevelIndex,
+                    highestUnlockedLevelIndex: highestUnlockedLevelIndex,
+                    bestScoresByLevelId: bestScoresByLevelId,
+                    onSelectLevel: onSelectLevel,
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: FilledButton.icon(
-                      onPressed: () => onAnswer(1),
-                      icon: const Icon(Icons.keyboard_arrow_right_rounded),
-                      label: Text(controller.currentPrompt.answers[1].label),
-                    ),
+                  const SizedBox(height: 10),
+                  FilledButton(
+                    onPressed: onStart,
+                    style: buttonStyle,
+                    child: const Text('Start Run'),
                   ),
                 ],
               ),
-            ],
-          ),
-        RunnerPhase.feedback => Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                state.lastResult?.isCorrect == true
-                    ? 'Streak Boost!'
-                    : 'Slow down and try again',
-                textAlign: TextAlign.center,
-                style: Theme.of(
-                  context,
-                ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w900),
+            RunnerPhase.running => Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    'Choose a gate',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(
+                      context,
+                    ).textTheme.labelLarge?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w900,
+                        ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Run up the lane',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(
+                      context,
+                    ).textTheme.labelMedium?.copyWith(
+                          color: Colors.white.withValues(alpha: 0.88),
+                          fontWeight: FontWeight.w800,
+                        ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Collect stars by choosing kind gates',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                          color: Colors.white.withValues(alpha: 0.72),
+                        ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Streak ${state.streak}',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(
+                      context,
+                    ).textTheme.labelLarge?.copyWith(
+                          color: KidNationVisualTheme.yellow,
+                          fontWeight: FontWeight.w900,
+                        ),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: FilledButton.icon(
+                          onPressed: () => onAnswer(0),
+                          style: secondaryButtonStyle,
+                          icon: const Icon(Icons.keyboard_arrow_left_rounded),
+                          label:
+                              Text(controller.currentPrompt.answers[0].label),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: FilledButton.icon(
+                          onPressed: () => onAnswer(1),
+                          style: secondaryButtonStyle,
+                          icon: const Icon(Icons.keyboard_arrow_right_rounded),
+                          label:
+                              Text(controller.currentPrompt.answers[1].label),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-              const SizedBox(height: 4),
-              Text(
-                _feedbackDetail(controller),
-                textAlign: TextAlign.center,
-                style: Theme.of(
-                  context,
-                ).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w800),
+            RunnerPhase.feedback => Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    state.lastResult?.isCorrect == true
+                        ? 'Streak Boost!'
+                        : 'Slow down and try again',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(
+                      context,
+                    ).textTheme.labelLarge?.copyWith(
+                          color: KidNationVisualTheme.yellow,
+                          fontWeight: FontWeight.w900,
+                        ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    _feedbackDetail(controller),
+                    textAlign: TextAlign.center,
+                    style: Theme.of(
+                      context,
+                    ).textTheme.labelMedium?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w800,
+                        ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Streak ${state.streak}',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                          color: Colors.white.withValues(alpha: 0.76),
+                        ),
+                  ),
+                  const SizedBox(height: 8),
+                  FilledButton(
+                    onPressed: onContinue,
+                    style: buttonStyle,
+                    child: const Text('Keep Running'),
+                  ),
+                ],
               ),
-              const SizedBox(height: 4),
-              Text(
-                'Streak ${state.streak}',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.labelMedium,
+            RunnerPhase.summary => Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    controller.roundResultTitle,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(
+                      context,
+                    ).textTheme.titleMedium?.copyWith(
+                          color: KidNationVisualTheme.yellow,
+                          fontWeight: FontWeight.w900,
+                        ),
+                  ),
+                  const SizedBox(height: 4),
+                  if (controller.roundResultTitle != 'Level Complete!' &&
+                      controller.isLevelComplete)
+                    Text(
+                      'Level Complete!',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodyMedium?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w800,
+                          ),
+                    ),
+                  Text(
+                    'Score: ${state.score}/${controller.contentPack.prompts.length} '
+                    '- Need ${controller.level.requiredScore}',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                  Text(
+                    'Best: ${bestScoresByLevelId[controller.level.id] ?? state.score}'
+                    '/${controller.contentPack.prompts.length}',
+                    textAlign: TextAlign.center,
+                    style:
+                        TextStyle(color: Colors.white.withValues(alpha: 0.82)),
+                  ),
+                  const SizedBox(height: 10),
+                  if (controller.isLevelComplete &&
+                      selectedLevelIndex < levels.length - 1)
+                    FilledButton(
+                      onPressed: onNextLevel,
+                      style: buttonStyle,
+                      child: const Text('Next Level'),
+                    )
+                  else
+                    FilledButton(
+                      onPressed: onStart,
+                      style: buttonStyle,
+                      child: const Text('Play Again'),
+                    ),
+                ],
               ),
-              const SizedBox(height: 8),
-              FilledButton(
-                onPressed: onContinue,
-                child: const Text('Keep Running'),
+            RunnerPhase.error => const Text(
+                'The run needs a quick reset.',
+                style: TextStyle(color: Colors.white),
               ),
-            ],
-          ),
-        RunnerPhase.summary => Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                controller.roundResultTitle,
-                textAlign: TextAlign.center,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
-              ),
-              const SizedBox(height: 4),
-              if (controller.roundResultTitle != 'Level Complete!' &&
-                  controller.isLevelComplete)
-                Text(
-                  'Level Complete!',
-                  textAlign: TextAlign.center,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w800),
-                ),
-              Text(
-                'Score: ${state.score}/${controller.contentPack.prompts.length} '
-                '- Need ${controller.level.requiredScore}',
-                textAlign: TextAlign.center,
-              ),
-              Text(
-                'Best: ${bestScoresByLevelId[controller.level.id] ?? state.score}'
-                '/${controller.contentPack.prompts.length}',
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 10),
-              if (controller.isLevelComplete &&
-                  selectedLevelIndex < levels.length - 1)
-                FilledButton(
-                  onPressed: onNextLevel,
-                  child: const Text('Next Level'),
-                )
-              else
-                FilledButton(
-                    onPressed: onStart, child: const Text('Play Again')),
-            ],
-          ),
-        RunnerPhase.error => const Text('The run needs a quick reset.'),
-      },
+          },
+        ),
+      ),
     );
   }
 
@@ -724,6 +884,14 @@ class _LevelChoice extends StatelessWidget {
             ? 'Complete'
             : 'Unlocked'
         : 'Locked';
+    final cardColor = isSelected
+        ? KidNationVisualTheme.yellow
+        : isUnlocked
+            ? Colors.white.withValues(alpha: 0.92)
+            : Colors.white.withValues(alpha: 0.42);
+    final textColor = isSelected || isUnlocked
+        ? KidNationVisualTheme.deepPurple
+        : Colors.white.withValues(alpha: 0.72);
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -732,35 +900,61 @@ class _LevelChoice extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.fromLTRB(8, 6, 8, 6),
             decoration: BoxDecoration(
-              color: isSelected
-                  ? Theme.of(context).colorScheme.primaryContainer
-                  : Colors.white.withValues(alpha: 0.64),
-              borderRadius: BorderRadius.circular(8),
+              color: cardColor,
+              borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: isSelected
-                    ? Theme.of(context).colorScheme.primary
-                    : const Color(0xFF151515).withValues(alpha: 0.08),
+                    ? Colors.white
+                    : Colors.white.withValues(alpha: 0.22),
+                width: isSelected ? 2 : 1,
               ),
+              boxShadow: [
+                if (isSelected)
+                  BoxShadow(
+                    color: KidNationVisualTheme.yellow.withValues(alpha: 0.3),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+              ],
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                ChoiceChip(
-                  label: Text(level.name),
+                ChoiceChip.elevated(
+                  label: Text(
+                    level.name,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                   selected: isSelected,
                   onSelected: isUnlocked ? (_) => onSelect() : null,
                   materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  showCheckmark: false,
+                  selectedColor: KidNationVisualTheme.primary,
+                  disabledColor:
+                      KidNationVisualTheme.navPurple.withValues(alpha: 0.42),
+                  labelStyle: TextStyle(
+                    color: isSelected
+                        ? Colors.white
+                        : isUnlocked
+                            ? KidNationVisualTheme.deepPurple
+                            : Colors.white.withValues(alpha: 0.64),
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
                 Text(
                   status,
                   style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                        color: textColor,
                         fontWeight: FontWeight.w800,
                       ),
                 ),
                 if (bestScore != null)
                   Text(
                     'Best: $bestScore/${level.contentPack.prompts.length}',
-                    style: Theme.of(context).textTheme.labelSmall,
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: textColor.withValues(alpha: 0.8),
+                          fontWeight: FontWeight.w700,
+                        ),
                   ),
               ],
             ),

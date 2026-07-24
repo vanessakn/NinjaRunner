@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kidnation_mobile_games/main.dart';
 import 'package:kidnation_mobile_games/ninja_runner/game/level_progress_store.dart';
+import 'package:kidnation_mobile_games/ninja_runner/rendering/kidnation_visual_theme.dart';
 import 'package:kidnation_mobile_games/ninja_runner/ui/ninja_runner_screen.dart';
 
 void main() {
@@ -21,6 +22,13 @@ void main() {
     expect(find.text('Help Jordan choose the kind gate.'), findsOneWidget);
     expect(find.text('5 quick choices'), findsOneWidget);
     expect(find.text('Runner Mode'), findsOneWidget);
+  });
+
+  testWidgets('uses KidNation visual shell colors', (tester) async {
+    await pumpNinjaRunner(tester);
+
+    final scaffold = tester.widget<Scaffold>(find.byType(Scaffold));
+    expect(scaffold.backgroundColor, KidNationVisualTheme.backgroundBottom);
   });
 
   testWidgets('locked levels cannot be selected before unlock', (tester) async {
