@@ -300,6 +300,10 @@ class _GameOverOverlay extends StatelessWidget {
                       label: 'Distance', value: '${state.distance.floor()} m'),
                   _RunStat(label: 'Stars', value: '${state.stars}'),
                   _RunStat(
+                    label: 'Speed',
+                    value: 'x${state.speed.toStringAsFixed(1)}',
+                  ),
+                  _RunStat(
                     label: 'Best',
                     value: '${state.bestDistance.floor()} m',
                   ),

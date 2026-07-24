@@ -398,17 +398,20 @@ class NinjaGoPainter extends CustomPainter {
     const gap = 8.0;
     const minReadablePillWidth = 80.0;
     final availableWidth = math.max(0.0, size.width - sidePadding * 2);
-    final rowPillWidth = (availableWidth - gap * 2) / 3;
+    final rowPillWidth = (availableWidth - gap * 3) / 4;
+    final speedLabel = 'Speed x${state.speed.toStringAsFixed(1)}';
 
     if (rowPillWidth >= minReadablePillWidth) {
       final labels = [
         'Score ${state.score}',
         'Stars ${state.stars}',
+        speedLabel,
         '${state.distance.floor()} m',
       ];
       final colors = [
         Colors.white.withValues(alpha: 0.9),
         _kidYellow.withValues(alpha: 0.92),
+        Colors.white.withValues(alpha: 0.9),
         Colors.white.withValues(alpha: 0.9),
       ];
 
@@ -425,7 +428,6 @@ class NinjaGoPainter extends CustomPainter {
     }
 
     final halfPillWidth = (availableWidth - gap) / 2;
-    final compactPillWidth = math.min(152.0, availableWidth);
     _drawPill(
       canvas,
       Offset(sidePadding, top),
@@ -436,16 +438,23 @@ class NinjaGoPainter extends CustomPainter {
     _drawPill(
       canvas,
       Offset(sidePadding + halfPillWidth + gap, top),
-      '${state.distance.floor()} m',
+      'Stars ${state.stars}',
+      width: halfPillWidth,
+      color: _kidYellow.withValues(alpha: 0.92),
+    );
+    _drawPill(
+      canvas,
+      Offset(sidePadding, top + 38),
+      speedLabel,
       width: halfPillWidth,
       color: Colors.white.withValues(alpha: 0.9),
     );
     _drawPill(
       canvas,
-      Offset((size.width - compactPillWidth) / 2, top + 38),
-      'Stars ${state.stars}',
-      width: compactPillWidth,
-      color: _kidYellow.withValues(alpha: 0.92),
+      Offset(sidePadding + halfPillWidth + gap, top + 38),
+      '${state.distance.floor()} m',
+      width: halfPillWidth,
+      color: Colors.white.withValues(alpha: 0.9),
     );
   }
 
