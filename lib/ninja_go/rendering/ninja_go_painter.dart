@@ -394,26 +394,58 @@ class NinjaGoPainter extends CustomPainter {
 
   void _drawHud(Canvas canvas, Size size) {
     final top = math.max(12.0, size.height * 0.035);
+    const sidePadding = 12.0;
+    const gap = 8.0;
+    const minReadablePillWidth = 80.0;
+    final availableWidth = math.max(0.0, size.width - sidePadding * 2);
+    final rowPillWidth = (availableWidth - gap * 2) / 3;
+
+    if (rowPillWidth >= minReadablePillWidth) {
+      final labels = [
+        'Score ${state.score}',
+        'Stars ${state.stars}',
+        '${state.distance.floor()} m',
+      ];
+      final colors = [
+        Colors.white.withValues(alpha: 0.9),
+        _kidYellow.withValues(alpha: 0.92),
+        Colors.white.withValues(alpha: 0.9),
+      ];
+
+      for (var index = 0; index < labels.length; index += 1) {
+        _drawPill(
+          canvas,
+          Offset(sidePadding + index * (rowPillWidth + gap), top),
+          labels[index],
+          width: rowPillWidth,
+          color: colors[index],
+        );
+      }
+      return;
+    }
+
+    final halfPillWidth = (availableWidth - gap) / 2;
+    final compactPillWidth = math.min(152.0, availableWidth);
     _drawPill(
       canvas,
-      Offset(14, top),
+      Offset(sidePadding, top),
       'Score ${state.score}',
-      width: math.min(124, size.width * 0.34),
+      width: halfPillWidth,
       color: Colors.white.withValues(alpha: 0.9),
     );
     _drawPill(
       canvas,
-      Offset(size.width / 2 - math.min(96, size.width * 0.25) / 2, top),
-      'Stars ${state.stars}',
-      width: math.min(96, size.width * 0.25),
-      color: _kidYellow.withValues(alpha: 0.92),
-    );
-    _drawPill(
-      canvas,
-      Offset(size.width - math.min(132, size.width * 0.34) - 14, top),
+      Offset(sidePadding + halfPillWidth + gap, top),
       '${state.distance.floor()} m',
-      width: math.min(132, size.width * 0.34),
+      width: halfPillWidth,
       color: Colors.white.withValues(alpha: 0.9),
+    );
+    _drawPill(
+      canvas,
+      Offset((size.width - compactPillWidth) / 2, top + 38),
+      'Stars ${state.stars}',
+      width: compactPillWidth,
+      color: _kidYellow.withValues(alpha: 0.92),
     );
   }
 
