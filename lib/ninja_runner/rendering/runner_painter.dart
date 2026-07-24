@@ -14,6 +14,7 @@ class RunnerPainter extends CustomPainter {
     required this.currentPrompt,
     this.runnerImage,
     this.backgroundImage,
+    this.visualRunCycleProgress = 0,
   });
 
   final ContentPack contentPack;
@@ -21,6 +22,7 @@ class RunnerPainter extends CustomPainter {
   final RunnerPrompt currentPrompt;
   final ui.Image? runnerImage;
   final ui.Image? backgroundImage;
+  final double visualRunCycleProgress;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -497,17 +499,19 @@ class RunnerPainter extends CustomPainter {
 
   void _drawRunner(Canvas canvas, Size size) {
     final scale = _sceneScale(size);
+    final dodgeDirection = _selectedDodgeDirection();
     final motion = RunnerMotion.calculate(
       size: size,
       progress: state.runnerProgress,
+      strideProgress: state.runnerProgress + visualRunCycleProgress,
       isRunning: state.phase == RunnerPhase.running,
       hasPositiveFeedback:
           state.streak > 0 || state.lastResult?.isCorrect == true,
       streak: state.streak,
-      dodgeDirection: _selectedDodgeDirection(),
+      dodgeDirection: dodgeDirection,
     );
     final isRunnerInMotion =
-        state.phase == RunnerPhase.running || _selectedDodgeDirection() != 0;
+        state.phase == RunnerPhase.running || dodgeDirection != 0;
     final armSwing = isRunnerInMotion
         ? math.sin(state.runnerProgress * math.pi * 12) * 8
         : 0.0;
@@ -998,7 +1002,8 @@ class RunnerPainter extends CustomPainter {
         oldDelegate.currentPrompt != currentPrompt ||
         oldDelegate.contentPack != contentPack ||
         oldDelegate.runnerImage != runnerImage ||
-        oldDelegate.backgroundImage != backgroundImage;
+        oldDelegate.backgroundImage != backgroundImage ||
+        oldDelegate.visualRunCycleProgress != visualRunCycleProgress;
   }
 }
 

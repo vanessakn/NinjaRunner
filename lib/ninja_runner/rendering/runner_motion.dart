@@ -38,12 +38,14 @@ class RunnerMotion {
     required bool hasPositiveFeedback,
     required int streak,
     double dodgeDirection = 0,
+    double? strideProgress,
   }) {
     final clampedProgress = progress.clamp(0, 1).toDouble();
     final playWidth =
         size.width <= 560 ? math.min(size.width, 336) : size.width;
     final scale = (size.height / 420).clamp(0.68, 1).toDouble();
-    final phase = math.sin(clampedProgress * math.pi * 12);
+    final strideCycleProgress = strideProgress ?? clampedProgress;
+    final phase = math.sin(strideCycleProgress * math.pi * 12);
     final clampedDodge = dodgeDirection.clamp(-1, 1).toDouble();
     final isInMotion = isRunning || clampedDodge != 0;
     final bounce = isInMotion ? phase * 5.5 * scale : 0.0;

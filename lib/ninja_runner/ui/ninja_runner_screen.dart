@@ -36,6 +36,7 @@ class _NinjaRunnerScreenState extends State<NinjaRunnerScreen>
   var _selectedLevelIndex = 0;
   var _highestUnlockedLevelIndex = 0;
   var _bestScoresByLevelId = <String, int>{};
+  var _feedbackRunCycleProgress = 0.0;
   Duration? _lastTick;
 
   @override
@@ -59,7 +60,8 @@ class _NinjaRunnerScreenState extends State<NinjaRunnerScreen>
   }
 
   void _handleTick(Duration elapsed) {
-    if (_controller.state.phase != RunnerPhase.running) {
+    if (_controller.state.phase != RunnerPhase.running &&
+        _controller.state.phase != RunnerPhase.feedback) {
       _stopTicker();
       return;
     }
@@ -73,7 +75,11 @@ class _NinjaRunnerScreenState extends State<NinjaRunnerScreen>
     final delta =
         (elapsed - lastTick).inMicroseconds / Duration.microsecondsPerSecond;
     setState(() {
-      _controller.tick(delta);
+      if (_controller.state.phase == RunnerPhase.running) {
+        _controller.tick(delta);
+      } else {
+        _feedbackRunCycleProgress += delta * _controller.level.runnerSpeed;
+      }
     });
   }
 
@@ -114,6 +120,7 @@ class _NinjaRunnerScreenState extends State<NinjaRunnerScreen>
                         currentPrompt: _controller.currentPrompt,
                         runnerImage: _loadedAssets.runnerImage,
                         backgroundImage: _loadedAssets.backgroundImage,
+                        visualRunCycleProgress: _feedbackRunCycleProgress,
                       ),
                       child: const SizedBox.expand(),
                     ),
@@ -140,7 +147,10 @@ class _NinjaRunnerScreenState extends State<NinjaRunnerScreen>
   }
 
   void _startRound() {
-    setState(_controller.startRound);
+    setState(() {
+      _feedbackRunCycleProgress = 0;
+      _controller.startRound();
+    });
     _feedbackEffects.playRoundStart();
     _startTicker();
   }
@@ -154,6 +164,7 @@ class _NinjaRunnerScreenState extends State<NinjaRunnerScreen>
     }
     setState(() {
       _selectedLevelIndex = index;
+      _feedbackRunCycleProgress = 0;
       _controller = _createController(_levels[index]);
       _loadedAssets = const _LoadedRunnerAssets();
     });
@@ -162,7 +173,10 @@ class _NinjaRunnerScreenState extends State<NinjaRunnerScreen>
 
   void _continueAfterFeedback() {
     final wasRunning = _controller.state.phase == RunnerPhase.feedback;
-    setState(_controller.continueAfterFeedback);
+    setState(() {
+      _feedbackRunCycleProgress = 0;
+      _controller.continueAfterFeedback();
+    });
     if (wasRunning && _controller.state.phase == RunnerPhase.summary) {
       _saveBestScoreForCurrentLevel();
       if (_controller.isLevelComplete) {
@@ -194,6 +208,7 @@ class _NinjaRunnerScreenState extends State<NinjaRunnerScreen>
     }
 
     setState(() {
+      _feedbackRunCycleProgress = 0;
       final result = _controller.selectAnswer(answers[index].id);
       if (result.isCorrect) {
         _feedbackEffects.playCorrectAnswer();
@@ -201,7 +216,9 @@ class _NinjaRunnerScreenState extends State<NinjaRunnerScreen>
         _feedbackEffects.playWrongAnswer();
       }
     });
-    if (_controller.state.phase != RunnerPhase.running) {
+    if (_controller.state.phase == RunnerPhase.feedback) {
+      _startTicker();
+    } else if (_controller.state.phase != RunnerPhase.running) {
       _stopTicker();
     }
   }
@@ -230,6 +247,7 @@ class _NinjaRunnerScreenState extends State<NinjaRunnerScreen>
           ? nextIndex
           : _highestUnlockedLevelIndex;
       _selectedLevelIndex = nextIndex;
+      _feedbackRunCycleProgress = 0;
       _controller = _createController(_levels[nextIndex]);
       _loadedAssets = const _LoadedRunnerAssets();
       _controller.startRound();

@@ -97,6 +97,35 @@ void main() {
     expect(rightDodge.legStride, lessThan(0));
   });
 
+  test('dodge stride can animate without moving the runner forward', () {
+    final earlyStride = RunnerMotion.calculate(
+      size: const Size(390, 720),
+      progress: 0.7,
+      strideProgress: 0.04,
+      isRunning: false,
+      hasPositiveFeedback: false,
+      streak: 0,
+      dodgeDirection: 1,
+    );
+    final laterStride = RunnerMotion.calculate(
+      size: const Size(390, 720),
+      progress: 0.7,
+      strideProgress: 0.12,
+      isRunning: false,
+      hasPositiveFeedback: false,
+      streak: 0,
+      dodgeDirection: 1,
+    );
+
+    expect(laterStride.groundAnchor, earlyStride.groundAnchor);
+    expect(laterStride.runnerCenter.dx, earlyStride.runnerCenter.dx);
+    expect(laterStride.runnerCenter.dy, isNot(earlyStride.runnerCenter.dy));
+    expect(earlyStride.leftFootLift, greaterThan(earlyStride.rightFootLift));
+    expect(laterStride.rightFootLift, greaterThan(laterStride.leftFootLift));
+    expect(earlyStride.legStride, greaterThan(0));
+    expect(laterStride.legStride, lessThan(0));
+  });
+
   test('correct feedback exposes celebration accents around runner', () {
     final motion = RunnerMotion.calculate(
       size: const Size(390, 720),
