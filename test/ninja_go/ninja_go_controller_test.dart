@@ -54,6 +54,113 @@ void main() {
       expect(controller.state.runnerAction, NinjaGoRunnerAction.running);
     });
 
+    test('increases distance score and speed while running', () {
+      final controller = NinjaGoController(seed: 7)..startRun();
+
+      controller.tick(1);
+      controller.tick(1);
+
+      expect(controller.state.distance, greaterThan(0));
+      expect(controller.state.score, controller.state.distance.floor());
+      expect(controller.state.speed, greaterThan(1));
+    });
+
+    test('collects current lane star in the hit window', () {
+      final controller = NinjaGoController(seed: 7)..startRun();
+
+      controller.debugSetEntities([
+        const NinjaGoEntity(
+          id: 1,
+          kind: NinjaGoEntityKind.star,
+          lane: NinjaGoLane.center,
+          position: NinjaGoController.hitPosition,
+        ),
+      ]);
+
+      controller.tick(0.01);
+
+      expect(controller.state.stars, 1);
+      expect(controller.state.score, greaterThanOrEqualTo(50));
+      expect(controller.state.entities, isEmpty);
+    });
+
+    test('current lane lane blocker in the hit window ends the run', () {
+      final controller = NinjaGoController(seed: 7)..startRun();
+
+      controller.tick(1);
+      final distanceBeforeCollision = controller.state.distance;
+      final scoreBeforeCollision = controller.state.score;
+      controller.debugSetEntities([
+        const NinjaGoEntity(
+          id: 1,
+          kind: NinjaGoEntityKind.laneBlocker,
+          lane: NinjaGoLane.center,
+          position: NinjaGoController.hitPosition,
+        ),
+      ]);
+
+      controller.tick(0.01);
+
+      expect(controller.state.phase, NinjaGoPhase.gameOver);
+      expect(controller.state.bestDistance,
+          greaterThanOrEqualTo(distanceBeforeCollision));
+      expect(controller.state.bestScore,
+          greaterThanOrEqualTo(scoreBeforeCollision));
+    });
+
+    test('jumping avoids ground barriers and sliding avoids overhead obstacles',
+        () {
+      final controller = NinjaGoController(seed: 7)..startRun();
+
+      controller.jump();
+      controller.debugSetEntities([
+        const NinjaGoEntity(
+          id: 1,
+          kind: NinjaGoEntityKind.groundBarrier,
+          lane: NinjaGoLane.center,
+          position: NinjaGoController.hitPosition,
+        ),
+      ]);
+
+      controller.tick(0.01);
+
+      expect(controller.state.phase, NinjaGoPhase.running);
+
+      controller.slide();
+      controller.debugSetEntities([
+        const NinjaGoEntity(
+          id: 2,
+          kind: NinjaGoEntityKind.overheadObstacle,
+          lane: NinjaGoLane.center,
+          position: NinjaGoController.hitPosition,
+        ),
+      ]);
+
+      controller.tick(0.01);
+
+      expect(controller.state.phase, NinjaGoPhase.running);
+    });
+
+    test('spawns deterministic entity sequences with the same seed', () {
+      final first = NinjaGoController(seed: 7)..startRun();
+      final second = NinjaGoController(seed: 7)..startRun();
+
+      for (var i = 0; i < 18; i += 1) {
+        first.tick(0.2);
+        second.tick(0.2);
+      }
+
+      final firstSequence = first.state.entities
+          .map((entity) => (kind: entity.kind, lane: entity.lane))
+          .toList();
+      final secondSequence = second.state.entities
+          .map((entity) => (kind: entity.kind, lane: entity.lane))
+          .toList();
+
+      expect(firstSequence, isNotEmpty);
+      expect(firstSequence, secondSequence);
+    });
+
     test('ignores movement and actions before the run starts', () {
       final controller = NinjaGoController(seed: 7);
 

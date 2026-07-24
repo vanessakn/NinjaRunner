@@ -40,6 +40,7 @@ class NinjaGoEntity {
 
   bool get isObstacle => kind != NinjaGoEntityKind.star;
   bool get isCollectible => kind == NinjaGoEntityKind.star;
+  bool get isPastRunner => position < -0.15;
 
   NinjaGoEntity copyWith({
     int? id,
