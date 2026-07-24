@@ -204,10 +204,60 @@ void main() {
       isRunning: false,
       hasPositiveFeedback: true,
       streak: 2,
+      feedbackPose: RunnerFeedbackPose.correct,
     );
 
     expect(motion.celebrationBursts, hasLength(4));
     expect(motion.boostTrailRect.width, greaterThan(motion.spriteRect.width));
+    expect(motion.feedbackScale, greaterThan(1));
+  });
+
+  test('correct feedback gives Jordan a small celebration hop', () {
+    final base = RunnerMotion.calculate(
+      size: const Size(390, 720),
+      progress: 0.7,
+      isRunning: false,
+      hasPositiveFeedback: false,
+      streak: 0,
+      dodgeDirection: -1,
+    );
+    final correct = RunnerMotion.calculate(
+      size: const Size(390, 720),
+      progress: 0.7,
+      isRunning: false,
+      hasPositiveFeedback: true,
+      streak: 1,
+      dodgeDirection: -1,
+      feedbackPose: RunnerFeedbackPose.correct,
+    );
+
+    expect(correct.runnerCenter.dy, lessThan(base.runnerCenter.dy));
+    expect(correct.feedbackScale, greaterThan(base.feedbackScale));
+    expect(correct.celebrationBursts, isNotEmpty);
+  });
+
+  test('wrong feedback adds a small recoil without celebration bursts', () {
+    final base = RunnerMotion.calculate(
+      size: const Size(390, 720),
+      progress: 0.7,
+      isRunning: false,
+      hasPositiveFeedback: false,
+      streak: 0,
+      dodgeDirection: 1,
+    );
+    final wrong = RunnerMotion.calculate(
+      size: const Size(390, 720),
+      progress: 0.7,
+      isRunning: false,
+      hasPositiveFeedback: false,
+      streak: 0,
+      dodgeDirection: 1,
+      feedbackPose: RunnerFeedbackPose.wrong,
+    );
+
+    expect(wrong.runnerCenter.dx, lessThan(base.runnerCenter.dx));
+    expect(wrong.feedbackScale, lessThan(base.feedbackScale));
+    expect(wrong.celebrationBursts, isEmpty);
   });
 
   test('selected left gate dodges the runner toward the left lane', () {

@@ -2,6 +2,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+enum RunnerFeedbackPose { none, correct, wrong }
+
 class RunnerMotion {
   const RunnerMotion({
     required this.runnerCenter,
@@ -16,6 +18,7 @@ class RunnerMotion {
     required this.leftFootLift,
     required this.rightFootLift,
     required this.celebrationBursts,
+    required this.feedbackScale,
   });
 
   final Offset runnerCenter;
@@ -30,6 +33,7 @@ class RunnerMotion {
   final double leftFootLift;
   final double rightFootLift;
   final List<Offset> celebrationBursts;
+  final double feedbackScale;
 
   static RunnerMotion calculate({
     required Size size,
@@ -40,6 +44,7 @@ class RunnerMotion {
     double dodgeDirection = 0,
     double? strideProgress,
     double dodgeProgress = 1,
+    RunnerFeedbackPose feedbackPose = RunnerFeedbackPose.none,
   }) {
     final clampedProgress = progress.clamp(0, 1).toDouble();
     final playWidth =
@@ -79,15 +84,30 @@ class RunnerMotion {
     final dodgeDistance = (targetGateX - baseX) * easedDodgeProgress;
     final dodgeVerticalLift =
         clampedDodge == 0 ? 0.0 : size.height * 0.11 * easedDodgeProgress;
-    final leanRadians =
-        (isRunning ? phase * 0.04 : 0.0) + effectiveDodge * 0.16;
+    final wrongRecoil = feedbackPose == RunnerFeedbackPose.wrong
+        ? -clampedDodge.sign * 9 * scale
+        : 0.0;
+    final feedbackHop =
+        feedbackPose == RunnerFeedbackPose.correct ? 13 * scale : 0.0;
+    final feedbackScale = switch (feedbackPose) {
+      RunnerFeedbackPose.correct => 1.045,
+      RunnerFeedbackPose.wrong => 0.965,
+      RunnerFeedbackPose.none => 1.0,
+    };
+    final leanRadians = (isRunning ? phase * 0.04 : 0.0) +
+        effectiveDodge * 0.16 +
+        switch (feedbackPose) {
+          RunnerFeedbackPose.correct => -clampedDodge.sign * 0.035,
+          RunnerFeedbackPose.wrong => clampedDodge.sign * 0.055,
+          RunnerFeedbackPose.none => 0.0,
+        };
 
     final groundY =
         _lerp(size.height * 0.86, size.height * 0.61, clampedProgress);
     final spriteWidth = 128 * scale;
     final spriteHeight = 168 * scale;
-    final groundAnchor =
-        Offset(baseX + dodgeDistance, groundY - dodgeVerticalLift);
+    final groundAnchor = Offset(baseX + dodgeDistance + wrongRecoil,
+        groundY - dodgeVerticalLift - feedbackHop);
     final runnerCenter =
         groundAnchor.translate(0, -spriteHeight * 0.5 + bounce);
     final spriteRect = Rect.fromCenter(
@@ -134,6 +154,7 @@ class RunnerMotion {
       leftFootLift: leftFootLift,
       rightFootLift: rightFootLift,
       celebrationBursts: celebrationBursts,
+      feedbackScale: feedbackScale,
     );
   }
 

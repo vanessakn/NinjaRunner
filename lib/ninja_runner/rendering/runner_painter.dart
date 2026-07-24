@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../game/runner_controller.dart';
 import '../models/content_pack.dart';
+import 'gate_feedback_style.dart';
 import 'kidnation_visual_theme.dart';
 import 'runner_motion.dart';
 
@@ -464,14 +465,25 @@ class RunnerPainter extends CustomPainter {
     final gateWidth = math.min(132.0, playWidth * 0.3) * scale;
     final gateHeight = math.min(150.0, size.height * 0.27) * scale;
     final centers = [playWidth * 0.3, playWidth * 0.62];
+    final selectedAnswerWasCorrect = state.lastResult?.isCorrect == true;
 
     for (var i = 0; i < answers.length; i++) {
       final isCorrect = answers[i].id == currentPrompt.correctAnswerId;
       final isSelected = state.lastResult?.selectedAnswerId == answers[i].id;
       final isFeedback = state.phase == RunnerPhase.feedback;
+      final style = GateFeedbackStyle.resolve(
+        gateIndex: i,
+        isFeedback: isFeedback,
+        isCorrect: isCorrect,
+        isSelected: isSelected,
+        selectedAnswerWasCorrect: selectedAnswerWasCorrect,
+        scale: scale,
+      );
+      final center =
+          Offset(centers[i], gateY + gateHeight / 2) + style.shakeOffset;
       final rect = RRect.fromRectAndRadius(
         Rect.fromCenter(
-          center: Offset(centers[i], gateY + gateHeight / 2),
+          center: center,
           width: gateWidth,
           height: gateHeight,
         ),
@@ -483,44 +495,24 @@ class RunnerPainter extends CustomPainter {
         Paint()
           ..style = PaintingStyle.stroke
           ..strokeWidth = 6
-          ..color = (i == 0
-                  ? KidNationVisualTheme.yellow
-                  : KidNationVisualTheme.secondary)
-              .withValues(alpha: 0.5),
+          ..color = style.portalColor,
       );
-      final color = isFeedback && isCorrect
-          ? KidNationVisualTheme.gold
-          : isFeedback && isSelected
-              ? const Color(0xFFFFB4A8)
-              : i == 0
-                  ? KidNationVisualTheme.cream
-                  : KidNationVisualTheme.palePurple;
-      if (isFeedback && (isCorrect || isSelected)) {
+      if (style.tone != GateFeedbackTone.neutral) {
         canvas.drawRRect(
-          rect.inflate(isCorrect ? 9 : 5),
+          rect.inflate(style.tone == GateFeedbackTone.correctSelected ? 11 : 7),
           Paint()
-            ..color =
-                (isCorrect ? const Color(0xFFFFD23F) : const Color(0xFFFF8A80))
-                    .withValues(alpha: 0.36)
+            ..color = style.glowColor
             ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 16),
         );
       }
       _drawSoftShadow(canvas, rect.outerRect, blur: 16);
-      canvas.drawRRect(rect, Paint()..color = color);
+      canvas.drawRRect(rect, Paint()..color = style.fillColor);
       canvas.drawRRect(
         rect,
         Paint()
           ..style = PaintingStyle.stroke
-          ..strokeWidth = isFeedback && isCorrect
-              ? 7
-              : isSelected
-                  ? 6
-                  : 4
-          ..color = isFeedback && isCorrect
-              ? const Color(0xFF13794A)
-              : isSelected
-                  ? KidNationVisualTheme.primary
-                  : Colors.white.withValues(alpha: 0.96),
+          ..strokeWidth = style.strokeWidth
+          ..color = style.strokeColor,
       );
       canvas.drawLine(
         Offset(rect.left + 10, rect.top + 46),
@@ -531,14 +523,14 @@ class RunnerPainter extends CustomPainter {
       );
       _drawGateWarningStripe(canvas, rect, i);
       canvas.drawCircle(
-        Offset(centers[i], rect.top + 47 * scale),
+        Offset(center.dx, rect.top + 47 * scale),
         13 * scale,
         Paint()..color = KidNationVisualTheme.yellow.withValues(alpha: 0.9),
       );
       _drawText(
         canvas,
         i == 0 ? 'L' : 'R',
-        Offset(centers[i], rect.top + 47 * scale),
+        Offset(center.dx, rect.top + 47 * scale),
         maxWidth: 22,
         fontSize: 14 * scale,
         fontWeight: FontWeight.w900,
@@ -548,7 +540,7 @@ class RunnerPainter extends CustomPainter {
       _drawText(
         canvas,
         i == 0 ? 'LEFT' : 'RIGHT',
-        Offset(centers[i], rect.top + 23 * scale),
+        Offset(center.dx, rect.top + 23 * scale),
         maxWidth: gateWidth - 20,
         fontSize: 13 * scale,
         fontWeight: FontWeight.w900,
@@ -558,14 +550,57 @@ class RunnerPainter extends CustomPainter {
       _drawText(
         canvas,
         answers[i].label,
-        Offset(centers[i], gateY + gateHeight / 2 + 18 * scale),
+        Offset(center.dx, gateY + gateHeight / 2 + 18 * scale),
         maxWidth: gateWidth - 18,
         fontSize: 24 * scale,
         fontWeight: FontWeight.w900,
-        color: KidNationVisualTheme.deepPurple,
+        color: style.labelColor,
         textAlign: TextAlign.center,
       );
+      if (style.badgeLabel case final badge?) {
+        _drawGateBadge(canvas, rect, badge, style);
+      }
     }
+  }
+
+  void _drawGateBadge(
+    Canvas canvas,
+    RRect gateRect,
+    String label,
+    GateFeedbackStyle style,
+  ) {
+    final badgeRect = RRect.fromRectAndRadius(
+      Rect.fromCenter(
+        center: Offset(gateRect.outerRect.center.dx, gateRect.top - 8),
+        width: math.min(gateRect.width - 10, 88),
+        height: 24,
+      ),
+      const Radius.circular(12),
+    );
+    canvas.drawRRect(
+      badgeRect,
+      Paint()
+        ..color = style.tone == GateFeedbackTone.wrongSelected
+            ? const Color(0xFFFFF0F2)
+            : Colors.white.withValues(alpha: 0.95),
+    );
+    canvas.drawRRect(
+      badgeRect,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2
+        ..color = style.strokeColor.withValues(alpha: 0.72),
+    );
+    _drawText(
+      canvas,
+      label,
+      badgeRect.outerRect.center,
+      maxWidth: badgeRect.width - 10,
+      fontSize: 10,
+      fontWeight: FontWeight.w900,
+      color: style.labelColor,
+      textAlign: TextAlign.center,
+    );
   }
 
   void _drawGateWarningStripe(Canvas canvas, RRect rect, int index) {
@@ -635,6 +670,7 @@ class RunnerPainter extends CustomPainter {
       streak: state.streak,
       dodgeDirection: dodgeDirection,
       dodgeProgress: dodgeProgress,
+      feedbackPose: _runnerFeedbackPose(),
     );
     final isRunnerInMotion =
         state.phase == RunnerPhase.running || dodgeDirection != 0;
@@ -785,6 +821,7 @@ class RunnerPainter extends CustomPainter {
     canvas.save();
     canvas.translate(motion.spriteRect.center.dx, motion.spriteRect.center.dy);
     canvas.rotate(motion.leanRadians);
+    canvas.scale(motion.feedbackScale);
     final paint = Paint()..filterQuality = FilterQuality.high;
     final centeredDestination = destination.shift(-destination.center);
     if (motion.legStride.abs() < 0.1 &&
@@ -1047,6 +1084,15 @@ class RunnerPainter extends CustomPainter {
       1 => 1,
       _ => 0,
     };
+  }
+
+  RunnerFeedbackPose _runnerFeedbackPose() {
+    if (state.phase != RunnerPhase.feedback) {
+      return RunnerFeedbackPose.none;
+    }
+    return state.lastResult?.isCorrect == true
+        ? RunnerFeedbackPose.correct
+        : RunnerFeedbackPose.wrong;
   }
 
   void _drawStar(Canvas canvas, Offset center, double radius, Paint paint) {
