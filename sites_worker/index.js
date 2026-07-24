@@ -11,11 +11,10 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     const assetPath = url.pathname === "/" ? "/index.html" : url.pathname;
-    const assetUrl = new URL(assetPath, url.origin);
-    const response = await env.ASSETS.fetch(new Request(assetUrl, request));
+    const response = await fetchAsset(env, request, url, assetPath);
 
     if (response.status === 404 && !assetPath.includes(".")) {
-      return env.ASSETS.fetch(new Request(new URL("/index.html", url.origin), request));
+      return fetchAsset(env, request, url, "/index.html");
     }
 
     if (assetPath.endsWith(".html")) {
@@ -29,6 +28,27 @@ export default {
     return response;
   },
 };
+
+async function fetchAsset(env, request, url, assetPath) {
+  const normalized = assetPath.startsWith("/") ? assetPath : `/${assetPath}`;
+  const candidates = [
+    normalized,
+    normalized.slice(1),
+    `/dist${normalized}`,
+    `dist${normalized}`,
+  ];
+
+  for (const candidate of candidates) {
+    const response = await env.ASSETS.fetch(
+      new Request(new URL(candidate, url.origin), request),
+    );
+    if (response.status !== 404) {
+      return response;
+    }
+  }
+
+  return env.ASSETS.fetch(new Request(new URL(normalized, url.origin), request));
+}
 
 function withHeaders(response, headers) {
   const nextHeaders = new Headers(response.headers);
