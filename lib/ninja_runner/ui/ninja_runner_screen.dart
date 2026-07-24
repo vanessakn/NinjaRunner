@@ -78,9 +78,14 @@ class _NinjaRunnerScreenState extends State<NinjaRunnerScreen>
       if (_controller.state.phase == RunnerPhase.running) {
         _controller.tick(delta);
       } else {
-        _feedbackRunCycleProgress += delta * _controller.level.runnerSpeed;
+        _feedbackRunCycleProgress =
+            (_feedbackRunCycleProgress + delta).clamp(0, 0.55).toDouble();
       }
     });
+    if (_controller.state.phase == RunnerPhase.feedback &&
+        _feedbackRunCycleProgress >= 0.55) {
+      _stopTicker();
+    }
   }
 
   @override

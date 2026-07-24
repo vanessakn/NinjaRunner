@@ -60,8 +60,7 @@ void main() {
     expect(rightStep.legStride, lessThan(0));
   });
 
-  test('dodge pose keeps running stride while leaning into the lane change',
-      () {
+  test('dodge pose uses a smaller walking step while moving sideways', () {
     final centered = RunnerMotion.calculate(
       size: const Size(390, 720),
       progress: 0.12,
@@ -73,31 +72,49 @@ void main() {
     final leftDodge = RunnerMotion.calculate(
       size: const Size(390, 720),
       progress: 0.12,
+      strideProgress: 0.04,
       isRunning: false,
       hasPositiveFeedback: false,
       streak: 0,
       dodgeDirection: -1,
+      dodgeProgress: 0.5,
     );
     final rightDodge = RunnerMotion.calculate(
       size: const Size(390, 720),
       progress: 0.12,
+      strideProgress: 0.04,
       isRunning: false,
       hasPositiveFeedback: false,
       streak: 0,
       dodgeDirection: 1,
+      dodgeProgress: 0.5,
+    );
+    final running = RunnerMotion.calculate(
+      size: const Size(390, 720),
+      progress: 0.04,
+      isRunning: true,
+      hasPositiveFeedback: false,
+      streak: 0,
     );
 
     expect(
         leftDodge.leanRadians.abs(), greaterThan(centered.leanRadians.abs()));
     expect(
         rightDodge.leanRadians.abs(), greaterThan(centered.leanRadians.abs()));
-    expect(leftDodge.rightFootLift, greaterThan(leftDodge.leftFootLift));
-    expect(rightDodge.rightFootLift, greaterThan(rightDodge.leftFootLift));
-    expect(leftDodge.legStride, lessThan(0));
-    expect(rightDodge.legStride, lessThan(0));
+    expect(leftDodge.leftFootLift, greaterThan(leftDodge.rightFootLift));
+    expect(rightDodge.leftFootLift, greaterThan(rightDodge.rightFootLift));
+    expect(leftDodge.legStride.abs(), lessThan(running.legStride.abs()));
+    expect(rightDodge.legStride.abs(), lessThan(running.legStride.abs()));
   });
 
-  test('dodge stride can animate without moving the runner forward', () {
+  test('dodge side step moves sideways before settling at the target lane', () {
+    final centered = RunnerMotion.calculate(
+      size: const Size(390, 720),
+      progress: 0.7,
+      isRunning: false,
+      hasPositiveFeedback: false,
+      streak: 0,
+    );
     final earlyStride = RunnerMotion.calculate(
       size: const Size(390, 720),
       progress: 0.7,
@@ -106,6 +123,7 @@ void main() {
       hasPositiveFeedback: false,
       streak: 0,
       dodgeDirection: 1,
+      dodgeProgress: 0.25,
     );
     final laterStride = RunnerMotion.calculate(
       size: const Size(390, 720),
@@ -115,15 +133,29 @@ void main() {
       hasPositiveFeedback: false,
       streak: 0,
       dodgeDirection: 1,
+      dodgeProgress: 0.75,
+    );
+    final settled = RunnerMotion.calculate(
+      size: const Size(390, 720),
+      progress: 0.7,
+      strideProgress: 0.3,
+      isRunning: false,
+      hasPositiveFeedback: false,
+      streak: 0,
+      dodgeDirection: 1,
+      dodgeProgress: 1,
     );
 
-    expect(laterStride.groundAnchor, earlyStride.groundAnchor);
-    expect(laterStride.runnerCenter.dx, earlyStride.runnerCenter.dx);
-    expect(laterStride.runnerCenter.dy, isNot(earlyStride.runnerCenter.dy));
+    expect(earlyStride.groundAnchor.dx, greaterThan(centered.groundAnchor.dx));
+    expect(
+        laterStride.groundAnchor.dx, greaterThan(earlyStride.groundAnchor.dx));
+    expect(settled.groundAnchor.dx, greaterThan(laterStride.groundAnchor.dx));
+    expect(laterStride.groundAnchor.dy, earlyStride.groundAnchor.dy);
     expect(earlyStride.leftFootLift, greaterThan(earlyStride.rightFootLift));
     expect(laterStride.rightFootLift, greaterThan(laterStride.leftFootLift));
-    expect(earlyStride.legStride, greaterThan(0));
-    expect(laterStride.legStride, lessThan(0));
+    expect(settled.leftFootLift, 0);
+    expect(settled.rightFootLift, 0);
+    expect(settled.legStride, 0);
   });
 
   test('correct feedback exposes celebration accents around runner', () {

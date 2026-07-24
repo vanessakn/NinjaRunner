@@ -500,6 +500,9 @@ class RunnerPainter extends CustomPainter {
   void _drawRunner(Canvas canvas, Size size) {
     final scale = _sceneScale(size);
     final dodgeDirection = _selectedDodgeDirection();
+    final dodgeProgress = state.phase == RunnerPhase.feedback
+        ? (visualRunCycleProgress / 0.55).clamp(0, 1).toDouble()
+        : 1.0;
     final motion = RunnerMotion.calculate(
       size: size,
       progress: state.runnerProgress,
@@ -509,11 +512,15 @@ class RunnerPainter extends CustomPainter {
           state.streak > 0 || state.lastResult?.isCorrect == true,
       streak: state.streak,
       dodgeDirection: dodgeDirection,
+      dodgeProgress: dodgeProgress,
     );
     final isRunnerInMotion =
         state.phase == RunnerPhase.running || dodgeDirection != 0;
     final armSwing = isRunnerInMotion
-        ? math.sin(state.runnerProgress * math.pi * 12) * 8
+        ? math.sin((state.runnerProgress + visualRunCycleProgress) *
+                math.pi *
+                12) *
+            8
         : 0.0;
     final runnerCenter = motion.runnerCenter;
     final palette = _characterPalette(contentPack.runner.portraitAssetId);

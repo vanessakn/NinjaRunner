@@ -39,22 +39,40 @@ class RunnerMotion {
     required int streak,
     double dodgeDirection = 0,
     double? strideProgress,
+    double dodgeProgress = 1,
   }) {
     final clampedProgress = progress.clamp(0, 1).toDouble();
     final playWidth =
         size.width <= 560 ? math.min(size.width, 336) : size.width;
     final scale = (size.height / 420).clamp(0.68, 1).toDouble();
     final strideCycleProgress = strideProgress ?? clampedProgress;
-    final phase = math.sin(strideCycleProgress * math.pi * 12);
     final clampedDodge = dodgeDirection.clamp(-1, 1).toDouble();
-    final isInMotion = isRunning || clampedDodge != 0;
-    final bounce = isInMotion ? phase * 5.5 * scale : 0.0;
-    final legStride = isInMotion ? phase * 14 * scale : 0.0;
-    final leftFootLift = isInMotion ? math.max(phase, 0) * 9 * scale : 0.0;
-    final rightFootLift = isInMotion ? math.max(-phase, 0) * 9 * scale : 0.0;
+    final clampedDodgeProgress = dodgeProgress.clamp(0, 1).toDouble();
+    final isSideStepping =
+        !isRunning && clampedDodge != 0 && clampedDodgeProgress < 1;
+    final phase = math.sin(strideCycleProgress * math.pi * 12);
+    final bounce = isRunning
+        ? phase * 5.5 * scale
+        : isSideStepping
+            ? phase.abs() * 2.5 * scale
+            : 0.0;
+    final legStride = isRunning
+        ? phase * 14 * scale
+        : isSideStepping
+            ? phase * 6 * scale
+            : 0.0;
+    final leftFootLift = isRunning || isSideStepping
+        ? math.max(phase, 0) * (isSideStepping ? 4 : 9) * scale
+        : 0.0;
+    final rightFootLift = isRunning || isSideStepping
+        ? math.max(-phase, 0) * (isSideStepping ? 4 : 9) * scale
+        : 0.0;
     final shoeLift = math.max(leftFootLift, rightFootLift);
-    final dodgeDistance = clampedDodge * playWidth * 0.16 * scale;
-    final leanRadians = (isRunning ? phase * 0.04 : 0.0) + clampedDodge * 0.16;
+    final easedDodgeProgress = _easeOutCubic(clampedDodgeProgress);
+    final effectiveDodge = clampedDodge * easedDodgeProgress;
+    final dodgeDistance = effectiveDodge * playWidth * 0.16 * scale;
+    final leanRadians =
+        (isRunning ? phase * 0.04 : 0.0) + effectiveDodge * 0.16;
 
     final groundY =
         _lerp(size.height * 0.86, size.height * 0.61, clampedProgress);
@@ -79,10 +97,10 @@ class RunnerMotion {
       height: hasPositiveFeedback ? 48 * scale : 0,
     );
     final dodgeTrailRect = Rect.fromCenter(
-      center:
-          runnerCenter.translate(clampedDodge * 42 * scale, spriteHeight * 0.2),
-      width: clampedDodge == 0 ? 0 : 70 * scale,
-      height: clampedDodge == 0 ? 0 : 26 * scale,
+      center: runnerCenter.translate(
+          effectiveDodge * 42 * scale, spriteHeight * 0.2),
+      width: effectiveDodge == 0 ? 0 : 70 * scale,
+      height: effectiveDodge == 0 ? 0 : 26 * scale,
     );
 
     final celebrationBursts = hasPositiveFeedback
@@ -112,5 +130,10 @@ class RunnerMotion {
 
   static double _lerp(double start, double end, double t) {
     return start + (end - start) * t;
+  }
+
+  static double _easeOutCubic(double t) {
+    final inverse = 1 - t;
+    return 1 - inverse * inverse * inverse;
   }
 }
