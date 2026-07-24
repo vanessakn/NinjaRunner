@@ -23,7 +23,19 @@ void main() {
 
     expect(find.text('KidNation Games'), findsOneWidget);
     expect(find.text('Ninja Runner'), findsOneWidget);
+    expect(find.text('Ninja Go'), findsOneWidget);
     expect(find.text('Bubble Blast'), findsOneWidget);
+  });
+
+  testWidgets('opens Ninja Go from the game picker', (tester) async {
+    await tester.pumpWidget(const KidNationMobileGamesApp());
+
+    await tester.tap(find.text('Ninja Go'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.text('KidNation Ninja Go'), findsOneWidget);
+    expect(find.text('Start Run'), findsOneWidget);
   });
 
   testWidgets('opens Bubble Blast from the game picker', (tester) async {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'bubble_blast/ui/bubble_blast_screen.dart';
+import 'ninja_go/ui/ninja_go_screen.dart';
 import 'ninja_runner/ui/ninja_runner_screen.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -25,7 +26,7 @@ class HomeScreen extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'Choose a quick learning game.',
+                'Choose a quick KidNation game.',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
@@ -36,6 +37,13 @@ class HomeScreen extends StatelessWidget {
                 subtitle: 'Run through the right answer gate.',
                 color: const Color(0xFF00A7E1),
                 onPressed: () => _open(context, const NinjaRunnerScreen()),
+              ),
+              const SizedBox(height: 12),
+              _GameButton(
+                title: 'Ninja Go',
+                subtitle: 'Dodge obstacles in a three-lane reflex run.',
+                color: const Color(0xFF16A34A),
+                onPressed: () => _open(context, const NinjaGoScreen()),
               ),
               const SizedBox(height: 12),
               _GameButton(
