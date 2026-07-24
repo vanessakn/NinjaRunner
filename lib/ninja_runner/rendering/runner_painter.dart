@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../game/runner_controller.dart';
 import '../models/content_pack.dart';
+import 'runner_motion.dart';
 
 class RunnerPainter extends CustomPainter {
   RunnerPainter({
@@ -495,21 +496,23 @@ class RunnerPainter extends CustomPainter {
   }
 
   void _drawRunner(Canvas canvas, Size size) {
-    final playWidth = _playWidth(size);
     final scale = _sceneScale(size);
-    final baseX = playWidth * 0.5;
-    final baseY = _lerp(size.height * 0.84, size.height * 0.6,
-        state.runnerProgress.clamp(0, 1));
-    final bounce = state.phase == RunnerPhase.running
-        ? math.sin(state.runnerProgress * math.pi * 12) * 4
-        : 0.0;
+    final motion = RunnerMotion.calculate(
+      size: size,
+      progress: state.runnerProgress,
+      isRunning: state.phase == RunnerPhase.running,
+      hasPositiveFeedback:
+          state.streak > 0 || state.lastResult?.isCorrect == true,
+      streak: state.streak,
+    );
     final armSwing = state.phase == RunnerPhase.running
         ? math.sin(state.runnerProgress * math.pi * 12) * 8
         : 0.0;
-    final runnerCenter = Offset(baseX, baseY + bounce);
+    final runnerCenter = motion.runnerCenter;
     final palette = _characterPalette(contentPack.runner.portraitAssetId);
+    _drawRunnerBoost(canvas, motion, scale);
     if (runnerImage case final image?) {
-      _drawRunnerImage(canvas, runnerCenter, baseY, scale, image);
+      _drawRunnerImage(canvas, motion, image);
       return;
     }
     final bodyPaint = Paint()..color = palette.shirtColor;
@@ -519,26 +522,9 @@ class RunnerPainter extends CustomPainter {
       ..color = const Color(0xFF151515);
 
     canvas.drawOval(
-      Rect.fromCenter(
-        center: Offset(baseX, baseY + 54),
-        width: 76 * scale,
-        height: 18 * scale,
-      ),
+      motion.shadowRect,
       Paint()..color = const Color(0xFF151515).withValues(alpha: 0.18),
     );
-    if (state.streak > 0 || state.lastResult?.isCorrect == true) {
-      final boostPaint = Paint()
-        ..color = contentPack.theme.secondaryColor.withValues(alpha: 0.28)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10);
-      canvas.drawOval(
-        Rect.fromCenter(
-          center: Offset(baseX - 26, baseY + 16),
-          width: (70 + state.streak * 6) * scale,
-          height: 36 * scale,
-        ),
-        boostPaint,
-      );
-    }
 
     final body = RRect.fromRectAndRadius(
       Rect.fromCenter(
@@ -551,7 +537,7 @@ class RunnerPainter extends CustomPainter {
     canvas.drawRRect(body, bodyPaint);
     canvas.drawRRect(body, outlinePaint);
 
-    final headCenter = Offset(baseX, runnerCenter.dy - 52 * scale);
+    final headCenter = Offset(runnerCenter.dx, runnerCenter.dy - 52 * scale);
     canvas.drawCircle(
         headCenter, 25 * scale, Paint()..color = palette.skinColor);
     canvas.drawCircle(headCenter, 25 * scale, outlinePaint);
@@ -611,7 +597,10 @@ class RunnerPainter extends CustomPainter {
     );
     canvas.drawLine(
       runnerCenter.translate(-18 * scale, 40 * scale),
-      runnerCenter.translate(-34 * scale, (62 - armSwing / 2) * scale),
+      runnerCenter.translate(
+        -34 * scale,
+        (62 - armSwing / 2 - motion.shoeLift) * scale,
+      ),
       limbPaint,
     );
     canvas.drawLine(
@@ -633,35 +622,45 @@ class RunnerPainter extends CustomPainter {
 
   void _drawRunnerImage(
     Canvas canvas,
-    Offset runnerCenter,
-    double baseY,
-    double scale,
+    RunnerMotion motion,
     ui.Image image,
   ) {
     canvas.drawOval(
-      Rect.fromCenter(
-        center: Offset(runnerCenter.dx, baseY + 54 * scale),
-        width: 76 * scale,
-        height: 18 * scale,
-      ),
+      motion.shadowRect,
       Paint()..color = const Color(0xFF151515).withValues(alpha: 0.18),
     );
     final imageSize = Size(image.width.toDouble(), image.height.toDouble());
-    final target = Rect.fromCenter(
-      center: runnerCenter.translate(0, -10 * scale),
-      width: 92 * scale,
-      height: 132 * scale,
-    );
-    final fitted = applyBoxFit(BoxFit.contain, imageSize, target.size);
+    final fitted =
+        applyBoxFit(BoxFit.contain, imageSize, motion.spriteRect.size);
     final source =
         Alignment.center.inscribe(fitted.source, Offset.zero & imageSize);
-    final destination = Alignment.center.inscribe(fitted.destination, target);
+    final destination = Alignment.center.inscribe(fitted.destination,
+        Rect.fromLTWH(0, 0, motion.spriteRect.width, motion.spriteRect.height));
+    canvas.save();
+    canvas.translate(motion.spriteRect.center.dx, motion.spriteRect.center.dy);
+    canvas.rotate(motion.leanRadians);
     canvas.drawImageRect(
       image,
       source,
-      destination,
-      Paint()..filterQuality = FilterQuality.medium,
+      destination.shift(-destination.center),
+      Paint()..filterQuality = FilterQuality.high,
     );
+    canvas.restore();
+  }
+
+  void _drawRunnerBoost(Canvas canvas, RunnerMotion motion, double scale) {
+    if (motion.celebrationBursts.isEmpty) {
+      return;
+    }
+    final boostPaint = Paint()
+      ..color = contentPack.theme.secondaryColor.withValues(alpha: 0.28)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10);
+    canvas.drawOval(motion.boostTrailRect, boostPaint);
+
+    final sparklePaint = Paint()..color = contentPack.theme.secondaryColor;
+    for (final burst in motion.celebrationBursts) {
+      _drawStar(canvas, burst, 7 * scale, sparklePaint);
+    }
   }
 
   void _drawFeedback(Canvas canvas, Size size, RunnerSelectionResult result) {
