@@ -12,6 +12,9 @@ class RunnerMotion {
     required this.dodgeTrailRect,
     required this.leanRadians,
     required this.shoeLift,
+    required this.legStride,
+    required this.leftFootLift,
+    required this.rightFootLift,
     required this.celebrationBursts,
   });
 
@@ -23,6 +26,9 @@ class RunnerMotion {
   final Rect dodgeTrailRect;
   final double leanRadians;
   final double shoeLift;
+  final double legStride;
+  final double leftFootLift;
+  final double rightFootLift;
   final List<Offset> celebrationBursts;
 
   static RunnerMotion calculate({
@@ -39,10 +45,24 @@ class RunnerMotion {
     final scale = (size.height / 420).clamp(0.68, 1).toDouble();
     final phase = math.sin(clampedProgress * math.pi * 12);
     final bounce = isRunning ? phase * 5.5 * scale : 0.0;
-    final shoeLift = isRunning ? phase.abs() * 7 * scale : 0.0;
     final clampedDodge = dodgeDirection.clamp(-1, 1).toDouble();
+    final runningStride = isRunning ? phase * 14 * scale : 0.0;
+    final dodgeStride =
+        !isRunning && clampedDodge != 0 ? clampedDodge * 8 * scale : 0.0;
+    final legStride = runningStride + dodgeStride;
+    final leftFootLift = isRunning
+        ? math.max(phase, 0) * 9 * scale
+        : clampedDodge < 0
+            ? 5 * scale
+            : 0.0;
+    final rightFootLift = isRunning
+        ? math.max(-phase, 0) * 9 * scale
+        : clampedDodge > 0
+            ? 5 * scale
+            : 0.0;
+    final shoeLift = math.max(leftFootLift, rightFootLift);
     final dodgeDistance = clampedDodge * playWidth * 0.16 * scale;
-    final leanRadians = (isRunning ? phase * 0.04 : 0.0) + clampedDodge * 0.11;
+    final leanRadians = (isRunning ? phase * 0.04 : 0.0) + clampedDodge * 0.16;
 
     final groundY =
         _lerp(size.height * 0.86, size.height * 0.61, clampedProgress);
@@ -91,6 +111,9 @@ class RunnerMotion {
       dodgeTrailRect: dodgeTrailRect,
       leanRadians: leanRadians,
       shoeLift: shoeLift,
+      legStride: legStride,
+      leftFootLift: leftFootLift,
+      rightFootLift: rightFootLift,
       celebrationBursts: celebrationBursts,
     );
   }

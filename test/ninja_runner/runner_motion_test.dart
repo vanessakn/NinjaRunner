@@ -38,6 +38,62 @@ void main() {
     expect(running.shoeLift, greaterThan(0));
   });
 
+  test('running alternates foot lift and leg stride for a natural step', () {
+    final leftStep = RunnerMotion.calculate(
+      size: const Size(390, 720),
+      progress: 0.04,
+      isRunning: true,
+      hasPositiveFeedback: false,
+      streak: 0,
+    );
+    final rightStep = RunnerMotion.calculate(
+      size: const Size(390, 720),
+      progress: 0.12,
+      isRunning: true,
+      hasPositiveFeedback: false,
+      streak: 0,
+    );
+
+    expect(leftStep.leftFootLift, greaterThan(leftStep.rightFootLift));
+    expect(rightStep.rightFootLift, greaterThan(rightStep.leftFootLift));
+    expect(leftStep.legStride, greaterThan(0));
+    expect(rightStep.legStride, lessThan(0));
+  });
+
+  test('dodge pose plants one foot and leans harder into the lane change', () {
+    final centered = RunnerMotion.calculate(
+      size: const Size(390, 720),
+      progress: 0.72,
+      isRunning: false,
+      hasPositiveFeedback: false,
+      streak: 0,
+      dodgeDirection: 0,
+    );
+    final leftDodge = RunnerMotion.calculate(
+      size: const Size(390, 720),
+      progress: 0.72,
+      isRunning: false,
+      hasPositiveFeedback: false,
+      streak: 0,
+      dodgeDirection: -1,
+    );
+    final rightDodge = RunnerMotion.calculate(
+      size: const Size(390, 720),
+      progress: 0.72,
+      isRunning: false,
+      hasPositiveFeedback: false,
+      streak: 0,
+      dodgeDirection: 1,
+    );
+
+    expect(
+        leftDodge.leanRadians.abs(), greaterThan(centered.leanRadians.abs()));
+    expect(
+        rightDodge.leanRadians.abs(), greaterThan(centered.leanRadians.abs()));
+    expect(leftDodge.leftFootLift, greaterThan(leftDodge.rightFootLift));
+    expect(rightDodge.rightFootLift, greaterThan(rightDodge.leftFootLift));
+  });
+
   test('correct feedback exposes celebration accents around runner', () {
     final motion = RunnerMotion.calculate(
       size: const Size(390, 720),

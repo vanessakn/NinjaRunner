@@ -600,14 +600,17 @@ class RunnerPainter extends CustomPainter {
     canvas.drawLine(
       runnerCenter.translate(-18 * scale, 40 * scale),
       runnerCenter.translate(
-        -34 * scale,
-        (62 - armSwing / 2 - motion.shoeLift) * scale,
+        -34 * scale - motion.legStride * 0.32,
+        (62 - armSwing / 2) * scale - motion.leftFootLift,
       ),
       limbPaint,
     );
     canvas.drawLine(
       runnerCenter.translate(18 * scale, 40 * scale),
-      runnerCenter.translate(40 * scale, (58 + armSwing / 2) * scale),
+      runnerCenter.translate(
+        40 * scale + motion.legStride * 0.32,
+        (58 + armSwing / 2) * scale - motion.rightFootLift,
+      ),
       limbPaint,
     );
 
@@ -641,13 +644,150 @@ class RunnerPainter extends CustomPainter {
     canvas.save();
     canvas.translate(motion.spriteRect.center.dx, motion.spriteRect.center.dy);
     canvas.rotate(motion.leanRadians);
-    canvas.drawImageRect(
+    final paint = Paint()..filterQuality = FilterQuality.high;
+    final centeredDestination = destination.shift(-destination.center);
+    if (motion.legStride.abs() < 0.1 &&
+        motion.leftFootLift < 0.1 &&
+        motion.rightFootLift < 0.1) {
+      canvas.drawImageRect(image, source, centeredDestination, paint);
+    } else {
+      _drawRunnerImageWithStride(
+        canvas,
+        image,
+        source,
+        centeredDestination,
+        motion,
+        paint,
+      );
+    }
+    canvas.restore();
+  }
+
+  void _drawRunnerImageWithStride(
+    Canvas canvas,
+    ui.Image image,
+    Rect source,
+    Rect destination,
+    RunnerMotion motion,
+    Paint paint,
+  ) {
+    final upperBottom = destination.top + destination.height * 0.66;
+    final legsTop = destination.top + destination.height * 0.54;
+    final upperDestination = Rect.fromLTRB(
+      destination.left,
+      destination.top,
+      destination.right,
+      upperBottom,
+    );
+    final legsDestination = Rect.fromLTRB(
+      destination.left,
+      legsTop,
+      destination.right,
+      destination.bottom,
+    );
+    final overlap = destination.width * 0.045;
+    final leftLegDestination = Rect.fromLTRB(
+      legsDestination.left,
+      legsDestination.top,
+      legsDestination.center.dx + overlap,
+      legsDestination.bottom,
+    );
+    final rightLegDestination = Rect.fromLTRB(
+      legsDestination.center.dx - overlap,
+      legsDestination.top,
+      legsDestination.right,
+      legsDestination.bottom,
+    );
+
+    _drawShiftedRunnerSlice(
+      canvas,
       image,
       source,
-      destination.shift(-destination.center),
-      Paint()..filterQuality = FilterQuality.high,
+      destination,
+      leftLegDestination,
+      Offset(-motion.legStride * 0.42, -motion.leftFootLift),
+      motion.legStride * 0.0018,
+      paint,
+    );
+    _drawShiftedRunnerSlice(
+      canvas,
+      image,
+      source,
+      destination,
+      rightLegDestination,
+      Offset(motion.legStride * 0.42, -motion.rightFootLift),
+      -motion.legStride * 0.0018,
+      paint,
+    );
+    _drawRunnerImageSlice(
+      canvas,
+      image,
+      _mapDestinationSliceToSource(
+        upperDestination,
+        destination,
+        source,
+      ),
+      upperDestination,
+      paint,
+    );
+  }
+
+  void _drawShiftedRunnerSlice(
+    Canvas canvas,
+    ui.Image image,
+    Rect fullSource,
+    Rect fullDestination,
+    Rect sliceDestination,
+    Offset offset,
+    double rotation,
+    Paint paint,
+  ) {
+    canvas.save();
+    canvas.clipRect(sliceDestination.inflate(10));
+    final pivot = Offset(sliceDestination.center.dx, sliceDestination.top);
+    canvas.translate(pivot.dx, pivot.dy);
+    canvas.rotate(rotation);
+    canvas.translate(-pivot.dx + offset.dx, -pivot.dy + offset.dy);
+    _drawRunnerImageSlice(
+      canvas,
+      image,
+      _mapDestinationSliceToSource(
+        sliceDestination,
+        fullDestination,
+        fullSource,
+      ),
+      sliceDestination,
+      paint,
     );
     canvas.restore();
+  }
+
+  void _drawRunnerImageSlice(
+    Canvas canvas,
+    ui.Image image,
+    Rect source,
+    Rect destination,
+    Paint paint,
+  ) {
+    canvas.drawImageRect(image, source, destination, paint);
+  }
+
+  Rect _mapDestinationSliceToSource(
+    Rect slice,
+    Rect fullDestination,
+    Rect fullSource,
+  ) {
+    final leftT = (slice.left - fullDestination.left) / fullDestination.width;
+    final topT = (slice.top - fullDestination.top) / fullDestination.height;
+    final rightT = (slice.right - fullDestination.left) / fullDestination.width;
+    final bottomT =
+        (slice.bottom - fullDestination.top) / fullDestination.height;
+    return Rect.fromLTRB(
+      fullSource.left + fullSource.width * leftT,
+      fullSource.top + fullSource.height * topT,
+      fullSource.left + fullSource.width * rightT,
+      fullSource.top + fullSource.height * bottomT,
+    );
   }
 
   void _drawRunnerBoost(Canvas canvas, RunnerMotion motion, double scale) {
