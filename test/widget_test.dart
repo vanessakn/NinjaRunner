@@ -116,9 +116,19 @@ void main() {
     expect(find.text('joy'), findsOneWidget);
   });
 
-  testWidgets(
-      'Ninja Go screen starts and shows game over after collision controls are available',
+  testWidgets('Ninja Go ready screen settles without active ticking',
       (tester) async {
+    await tester.pumpWidget(const MaterialApp(home: NinjaGoScreen()));
+    await tester.pumpAndSettle(
+      const Duration(milliseconds: 10),
+      EnginePhase.sendSemanticsUpdate,
+      const Duration(milliseconds: 100),
+    );
+
+    expect(find.text('Start Run'), findsOneWidget);
+  });
+
+  testWidgets('Ninja Go screen starts and shows run controls', (tester) async {
     await tester.pumpWidget(const MaterialApp(home: NinjaGoScreen()));
 
     expect(find.text('KidNation Ninja Go'), findsOneWidget);

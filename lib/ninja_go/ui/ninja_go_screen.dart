@@ -22,7 +22,7 @@ class _NinjaGoScreenState extends State<NinjaGoScreen>
   void initState() {
     super.initState();
     _controller = NinjaGoController();
-    _ticker = createTicker(_handleTick)..start();
+    _ticker = createTicker(_handleTick);
   }
 
   @override
@@ -32,6 +32,11 @@ class _NinjaGoScreenState extends State<NinjaGoScreen>
   }
 
   void _handleTick(Duration elapsed) {
+    if (_controller.state.phase != NinjaGoPhase.running) {
+      _stopTicker();
+      return;
+    }
+
     final lastTick = _lastTick;
     _lastTick = elapsed;
     if (lastTick == null) {
@@ -43,6 +48,9 @@ class _NinjaGoScreenState extends State<NinjaGoScreen>
     setState(() {
       _controller.tick(delta);
     });
+    if (_controller.state.phase != NinjaGoPhase.running) {
+      _stopTicker();
+    }
   }
 
   @override
@@ -89,6 +97,7 @@ class _NinjaGoScreenState extends State<NinjaGoScreen>
 
   void _startRun() {
     setState(_controller.startRun);
+    _startTicker();
   }
 
   void _moveLeft() {
@@ -122,6 +131,20 @@ class _NinjaGoScreenState extends State<NinjaGoScreen>
       _jump();
     } else if (velocity > 0) {
       _slide();
+    }
+  }
+
+  void _startTicker() {
+    _lastTick = null;
+    if (!_ticker.isActive) {
+      _ticker.start();
+    }
+  }
+
+  void _stopTicker() {
+    _lastTick = null;
+    if (_ticker.isActive) {
+      _ticker.stop();
     }
   }
 }
